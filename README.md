@@ -8,4 +8,6 @@ ngrok http 5000
 ```
 
 ## Application 
-```python3 app.py```
+```bash 
+python3 app.py
+```
