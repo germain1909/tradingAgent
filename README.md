@@ -1,11 +1,11 @@
-# tradingAgent
+# Trading Agent Setup
 
-NGROK
+## NGROK
+
+```bash
 ngrok config add-authtoken ************
 ngrok http 5000
+```
 
-application 
-python3 app.py
-
-
-
+## Application 
+```python3 app.py```
