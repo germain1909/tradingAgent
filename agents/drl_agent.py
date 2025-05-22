@@ -32,7 +32,7 @@ class PPOTradingAgent:
     def train(self, total_timesteps=100_000, callback=None):
         if self.verbose:
             print(f"Starting training for {total_timesteps} timesteps...")
-        self.model.learn(total_timesteps=total_timesteps)
+        self.model.learn(total_timesteps=total_timesteps,callback=callback)
         if self.verbose:
             print("Training completed.")
 

@@ -11,7 +11,7 @@ class FuturesTradingEnv(gym.Env):
 
     metadata = {"render.modes": ["human"]}
 
-    def __init__(self, data: pd.DataFrame, initial_balance=100000):
+    def __init__(self, data: pd.DataFrame, initial_balance=100000,asset_name:str = "GC4"):
         super(FuturesTradingEnv, self).__init__()
 
         self.data = data.reset_index(drop=True)
@@ -31,11 +31,23 @@ class FuturesTradingEnv(gym.Env):
         self.position = 0  # number of contracts held
         self.done = False
 
+        # Trade bookkeeping
+        if "symbol" not in data.columns:
+            raise ValueError("DataFrame must have a 'symbol' column")
+        self.asset = data["symbol"].iloc[0]
+        self.balance = initial_balance
+        self.trades      = []   # completed trades
+        self._open_trade = None # currently open
+        
+
     def reset(self):
         self.current_step = 0
         self.balance = self.initial_balance
         self.position = 0
         self.done = False
+        # 3a) start each episode with fresh trade logs
+        self.trades      = []
+        self._open_trade = None
         return self._get_obs()
 
     def _get_obs(self):
@@ -44,43 +56,62 @@ class FuturesTradingEnv(gym.Env):
         return np.array([price, self.balance], dtype=np.float32)
 
     def step(self, action):
-        """
-        action: scalar indicating contracts to buy/sell (negative means sell)
-        """
-
+        # a) if already done
         if self.done:
-            return self._get_obs(), 0, self.done, {}
+            return self._get_obs(), 0, True, {}
 
-        price = self.data.loc[self.current_step, "price"]
+        # b) snapshot
+        price    = self.data.loc[self.current_step, "price"]
+        prev_pos = self.position
 
-        # Apply action: buy/sell contracts
+        # c) apply action
         trade_contracts = int(action[0])
+        cost            = trade_contracts * price * 100
+        self.position  += trade_contracts
+        self.balance   -= cost
 
-        # Calculate cost and update position and balance
-        cost = trade_contracts * price * 100  # assuming contract multiplier 100
-        self.position += trade_contracts
-        self.balance -= cost
+        # d) record open (flat→nonzero)
+        if prev_pos == 0 and self.position != 0:
+            self._open_trade = {
+                "asset":        self.asset,
+                "contracts":    self.position,
+                "entry_price":  price,
+                "entry_step":   self.current_step,
+            }
 
-        # Move to next time step
+        # e) advance time
         self.current_step += 1
-
-        if self.current_step >= len(self.data) - 1:
+        if self.current_step >= len(self.data)-1:
             self.done = True
 
-        # Reward: unrealized PnL + balance change (simplified)
-        next_price = self.data.loc[self.current_step, "price"]
-        unrealized_pnl = self.position * (next_price - price) * 100
+        # f) compute reward
+        next_price     = self.data.loc[self.current_step, "price"]
+        reward         = self.position * (next_price - price) * 100
 
-        reward = unrealized_pnl
-
+        # g) base info
         obs = self._get_obs()
         info = {
-            "balance": self.balance,
-            "position": self.position,
+            "balance":       self.balance,
+            "position":      self.position,
             "current_price": next_price,
         }
 
+        # h) record close (nonzero→flat)
+        if prev_pos != 0 and self.position == 0 and self._open_trade is not None:
+            tr = {
+                **self._open_trade,
+                "exit_price": price,
+                "exit_step":  self.current_step,
+                "pl":         self._open_trade["contracts"] 
+                            * (price - self._open_trade["entry_price"]) * 100,
+                "timestamp":  self.data.loc[self.current_step, "t"],
+            }
+            self.trades.append(tr)
+            self._open_trade = None
+            info["last_trade"] = tr
+
         return obs, reward, self.done, info
+
 
     def render(self, mode="human"):
         print(

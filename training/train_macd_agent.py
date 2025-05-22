@@ -3,6 +3,8 @@ import json
 import pandas as pd
 from envs.futures_trading_env import FuturesTradingEnv  # Your custom gym environment
 from agents.drl_agent import PPOTradingAgent  # Your PPO agent class
+from callbacks.trade_logging import TradeLoggingJSONCallback #Logging callback
+
 
 def train_and_save_model():
     try:
@@ -18,9 +20,11 @@ def train_and_save_model():
         df = pd.DataFrame(bars)
         #Rename the close price column to what your env expects
         df = df.rename(columns={"c": "price"})
+        df["t"] = pd.to_datetime(df["t"])
+        df["symbol"] = "GC2"
         print(f"Loaded futures data with shape: {bars}")
         print(f"Loaded {len(bars)} bars")
-        print(bars[0])
+        print(df)
 
         # Prepare environment kwargs, adjust depending on your env's __init__ signature
         env_kwargs = {"data": df}
@@ -29,8 +33,14 @@ def train_and_save_model():
         # Initialize the PPO agent with your custom environment class and kwargs
         agent = PPOTradingAgent(env_class=FuturesTradingEnv, env_kwargs=env_kwargs, verbose=1)
 
+        # Instantiate with verbose=1 for real-time prints
+        trade_cb = TradeLoggingJSONCallback(
+        log_path="models/trades.json",
+        verbose=1
+        )
+
         # Train the agent
-        agent.train(total_timesteps=10000)
+        agent.train(total_timesteps=10000,callback=trade_cb)
         print("Training completed.")
 
         # Save the trained model
