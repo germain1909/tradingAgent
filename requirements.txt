@@ -1,1 +1,9 @@
 flask
+stable-baselines3
+gym
+pandas
+numpy
+matplotlib
+scikit-learn
+ta
+shimmy>=0.2.1

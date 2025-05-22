@@ -11,3 +11,15 @@ ngrok http 5000
 ```bash 
 python3 app.py
 ```
+
+
+```bash
+curl -X 'POST' \
+  'https://gateway-api-demo.s2f.projectx.com/api/Auth/loginKey' \
+  -H 'accept: text/plain' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "userName": "string",
+  "apiKey": "string"
+}'
+```
