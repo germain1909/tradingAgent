@@ -98,13 +98,15 @@ class FuturesTradingEnv(gym.Env):
 
         # h) record close (nonzero→flat)
         if prev_pos != 0 and self.position == 0 and self._open_trade is not None:
+            # pull the just‐closed row
+            row = self.data.iloc[self.current_step]
             tr = {
                 **self._open_trade,
                 "exit_price": price,
                 "exit_step":  self.current_step,
                 "pl":         self._open_trade["contracts"] 
                             * (price - self._open_trade["entry_price"]) * 100,
-                "timestamp":  self.data.loc[self.current_step, "t"],
+                "timestamp":  row["datetime"].isoformat(),
             }
             self.trades.append(tr)
             self._open_trade = None

@@ -4,6 +4,7 @@ import pandas as pd
 from envs.futures_trading_env import FuturesTradingEnv  # Your custom gym environment
 from agents.drl_agent import PPOTradingAgent  # Your PPO agent class
 from callbacks.trade_logging import TradeLoggingJSONCallback #Logging callback
+from util.indicators import compute_rsi
 
 
 def train_and_save_model():
@@ -17,11 +18,29 @@ def train_and_save_model():
         with open(json_path, "r") as f:
             raw = json.load(f)
         bars = raw["bars"]
-        df = pd.DataFrame(bars)
+        df = pd.DataFrame(bars).rename(columns={
+            "t": "datetime",  # original timestamp field
+            "o": "open",
+            "h": "high",
+            "l": "low",
+            "c": "price",
+            "v": "volume",
+        })
+        print("Columns after rename:", df.columns.tolist())
+
+        # ─── Step 2: Parse & set index, then reset so datetime is a column ─────
+        df["datetime"] = pd.to_datetime(df["datetime"])
+        df.set_index("datetime", inplace=True)
+        print("Index type:", type(df.index), "| sample index:", df.index[:3])
+
+         # bring datetime back as a column for the env
+        df.reset_index(inplace=True)
+        print("Columns after reset_index:", df.columns.tolist())
+
         #Rename the close price column to what your env expects
-        df = df.rename(columns={"c": "price"})
-        df["t"] = pd.to_datetime(df["t"])
         df["symbol"] = "GC2"
+        print(f"DataFrame ready: {len(df)} rows, head:\n", df.head())
+        
         print(f"Loaded futures data with shape: {bars}")
         print(f"Loaded {len(bars)} bars")
         print(df)

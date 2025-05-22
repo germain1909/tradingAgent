@@ -1,0 +1,2052 @@
+[
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3233.6,
+    "entry_step": 4,
+    "exit_price": 3233.2,
+    "exit_step": 10,
+    "pl": -40.000000000009095,
+    "timestamp": "2025-05-15T19:49:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3233.5,
+    "entry_step": 11,
+    "exit_price": 3233.7,
+    "exit_step": 13,
+    "pl": 19.99999999998181,
+    "timestamp": "2025-05-15T19:46:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3232.9,
+    "entry_step": 18,
+    "exit_price": 3232.3,
+    "exit_step": 25,
+    "pl": -59.999999999990905,
+    "timestamp": "2025-05-15T19:34:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3231.0,
+    "entry_step": 26,
+    "exit_price": 3232.3,
+    "exit_step": 34,
+    "pl": -130.0000000000182,
+    "timestamp": "2025-05-15T19:25:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3228.5,
+    "entry_step": 38,
+    "exit_price": 3225.5,
+    "exit_step": 117,
+    "pl": -300.0,
+    "timestamp": "2025-05-15T18:02:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3223.4,
+    "entry_step": 119,
+    "exit_price": 3220.3,
+    "exit_step": 135,
+    "pl": 309.9999999999909,
+    "timestamp": "2025-05-15T17:44:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3220.7,
+    "entry_step": 135,
+    "exit_price": 3220.7,
+    "exit_step": 139,
+    "pl": 0.0,
+    "timestamp": "2025-05-15T17:40:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3222.5,
+    "entry_step": 139,
+    "exit_price": 3228.0,
+    "exit_step": 179,
+    "pl": -550.0,
+    "timestamp": "2025-05-15T17:00:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3226.4,
+    "entry_step": 179,
+    "exit_price": 3225.3,
+    "exit_step": 186,
+    "pl": 109.9999999999909,
+    "timestamp": "2025-05-15T16:53:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3224.1,
+    "entry_step": 189,
+    "exit_price": 3225.1,
+    "exit_step": 199,
+    "pl": -100.0,
+    "timestamp": "2025-05-15T16:40:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3224.1,
+    "entry_step": 202,
+    "exit_price": 3222.8,
+    "exit_step": 212,
+    "pl": -129.99999999997272,
+    "timestamp": "2025-05-15T16:27:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3223.2,
+    "entry_step": 218,
+    "exit_price": 3205.1,
+    "exit_step": 306,
+    "pl": -1809.999999999991,
+    "timestamp": "2025-05-15T14:53:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3207.1,
+    "entry_step": 309,
+    "exit_price": 3204.2,
+    "exit_step": 314,
+    "pl": 290.0000000000091,
+    "timestamp": "2025-05-15T14:45:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3204.1,
+    "entry_step": 316,
+    "exit_price": 3201.9,
+    "exit_step": 324,
+    "pl": -219.9999999999818,
+    "timestamp": "2025-05-15T14:35:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3205.5,
+    "entry_step": 327,
+    "exit_price": 3209.2,
+    "exit_step": 331,
+    "pl": -369.9999999999818,
+    "timestamp": "2025-05-15T14:28:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3204.4,
+    "entry_step": 332,
+    "exit_price": 3209.4,
+    "exit_step": 336,
+    "pl": -500.0,
+    "timestamp": "2025-05-15T14:23:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3205.7,
+    "entry_step": 339,
+    "exit_price": 3205.7,
+    "exit_step": 343,
+    "pl": -0.0,
+    "timestamp": "2025-05-15T14:16:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3206.9,
+    "entry_step": 346,
+    "exit_price": 3207.3,
+    "exit_step": 348,
+    "pl": -40.000000000009095,
+    "timestamp": "2025-05-15T14:11:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3196.1,
+    "entry_step": 357,
+    "exit_price": 3186.3,
+    "exit_step": 429,
+    "pl": 979.9999999999727,
+    "timestamp": "2025-05-15T12:50:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3185.1,
+    "entry_step": 432,
+    "exit_price": 3186.8,
+    "exit_step": 435,
+    "pl": -170.00000000002728,
+    "timestamp": "2025-05-15T12:44:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3186.2,
+    "entry_step": 440,
+    "exit_price": 3186.5,
+    "exit_step": 442,
+    "pl": 30.00000000001819,
+    "timestamp": "2025-05-15T12:37:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3187.1,
+    "entry_step": 442,
+    "exit_price": 3189.3,
+    "exit_step": 445,
+    "pl": -220.00000000002728,
+    "timestamp": "2025-05-15T12:34:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3186.3,
+    "entry_step": 450,
+    "exit_price": 3185.6,
+    "exit_step": 458,
+    "pl": -70.00000000002728,
+    "timestamp": "2025-05-15T12:21:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3181.8,
+    "entry_step": 461,
+    "exit_price": 3180.4,
+    "exit_step": 483,
+    "pl": 140.0000000000091,
+    "timestamp": "2025-05-15T11:56:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3234.6,
+    "entry_step": 0,
+    "exit_price": 3227.5,
+    "exit_step": 52,
+    "pl": 709.9999999999909,
+    "timestamp": "2025-05-15T19:07:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3233.5,
+    "entry_step": 3,
+    "exit_price": 3228.0,
+    "exit_step": 73,
+    "pl": -550.0,
+    "timestamp": "2025-05-15T18:46:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 2,
+    "entry_price": 3229.0,
+    "entry_step": 75,
+    "exit_price": 3227.1,
+    "exit_step": 88,
+    "pl": -380.0000000000182,
+    "timestamp": "2025-05-15T18:31:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3227.4,
+    "entry_step": 89,
+    "exit_price": 3227.5,
+    "exit_step": 91,
+    "pl": 9.999999999990905,
+    "timestamp": "2025-05-15T18:28:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3225.6,
+    "entry_step": 91,
+    "exit_price": 3228.5,
+    "exit_step": 103,
+    "pl": -290.0000000000091,
+    "timestamp": "2025-05-15T18:16:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3227.9,
+    "entry_step": 105,
+    "exit_price": 3227.1,
+    "exit_step": 108,
+    "pl": 80.00000000001819,
+    "timestamp": "2025-05-15T18:11:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3227.3,
+    "entry_step": 109,
+    "exit_price": 3225.5,
+    "exit_step": 117,
+    "pl": 180.0000000000182,
+    "timestamp": "2025-05-15T18:02:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3224.4,
+    "entry_step": 118,
+    "exit_price": 3220.3,
+    "exit_step": 247,
+    "pl": 409.9999999999909,
+    "timestamp": "2025-05-15T15:52:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3218.2,
+    "entry_step": 251,
+    "exit_price": 3217.8,
+    "exit_step": 255,
+    "pl": -39.99999999996362,
+    "timestamp": "2025-05-15T15:44:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3219.3,
+    "entry_step": 257,
+    "exit_price": 3220.0,
+    "exit_step": 261,
+    "pl": -69.99999999998181,
+    "timestamp": "2025-05-15T15:38:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3218.3,
+    "entry_step": 263,
+    "exit_price": 3218.6,
+    "exit_step": 275,
+    "pl": -29.999999999972715,
+    "timestamp": "2025-05-15T15:24:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3215.4,
+    "entry_step": 280,
+    "exit_price": 3215.8,
+    "exit_step": 282,
+    "pl": 40.000000000009095,
+    "timestamp": "2025-05-15T15:17:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3213.8,
+    "entry_step": 289,
+    "exit_price": 3213.0,
+    "exit_step": 293,
+    "pl": -80.00000000001819,
+    "timestamp": "2025-05-15T15:06:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3212.0,
+    "entry_step": 294,
+    "exit_price": 3208.2,
+    "exit_step": 302,
+    "pl": 380.0000000000182,
+    "timestamp": "2025-05-15T14:57:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3206.5,
+    "entry_step": 303,
+    "exit_price": 3207.2,
+    "exit_step": 313,
+    "pl": -69.99999999998181,
+    "timestamp": "2025-05-15T14:46:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3204.0,
+    "entry_step": 315,
+    "exit_price": 3204.8,
+    "exit_step": 318,
+    "pl": -80.00000000001819,
+    "timestamp": "2025-05-15T14:41:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3205.2,
+    "entry_step": 320,
+    "exit_price": 3208.2,
+    "exit_step": 338,
+    "pl": -300.0,
+    "timestamp": "2025-05-15T14:21:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3205.8,
+    "entry_step": 340,
+    "exit_price": 3195.4,
+    "exit_step": 362,
+    "pl": -1040.000000000009,
+    "timestamp": "2025-05-15T13:57:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3195.2,
+    "entry_step": 368,
+    "exit_price": 3197.6,
+    "exit_step": 382,
+    "pl": 240.0000000000091,
+    "timestamp": "2025-05-15T13:37:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3234.7,
+    "entry_step": 1,
+    "exit_price": 3234.0,
+    "exit_step": 3,
+    "pl": 69.99999999998181,
+    "timestamp": "2025-05-15T19:56:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3233.8,
+    "entry_step": 5,
+    "exit_price": 3234.1,
+    "exit_step": 8,
+    "pl": 29.999999999972715,
+    "timestamp": "2025-05-15T19:51:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3233.2,
+    "entry_step": 9,
+    "exit_price": 3234.1,
+    "exit_step": 14,
+    "pl": 90.0000000000091,
+    "timestamp": "2025-05-15T19:45:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3233.6,
+    "entry_step": 16,
+    "exit_price": 3228.2,
+    "exit_step": 78,
+    "pl": -540.0000000000091,
+    "timestamp": "2025-05-15T18:41:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3228.3,
+    "entry_step": 78,
+    "exit_price": 3228.8,
+    "exit_step": 81,
+    "pl": -50.0,
+    "timestamp": "2025-05-15T18:38:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 2,
+    "entry_price": 3228.5,
+    "entry_step": 81,
+    "exit_price": 3228.6,
+    "exit_step": 104,
+    "pl": 19.99999999998181,
+    "timestamp": "2025-05-15T18:15:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3227.1,
+    "entry_step": 107,
+    "exit_price": 3226.8,
+    "exit_step": 115,
+    "pl": -29.999999999972715,
+    "timestamp": "2025-05-15T18:04:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3224.4,
+    "entry_step": 118,
+    "exit_price": 3224.1,
+    "exit_step": 190,
+    "pl": 30.00000000001819,
+    "timestamp": "2025-05-15T16:49:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3223.5,
+    "entry_step": 192,
+    "exit_price": 3225.0,
+    "exit_step": 195,
+    "pl": 150.0,
+    "timestamp": "2025-05-15T16:44:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3224.3,
+    "entry_step": 196,
+    "exit_price": 3223.5,
+    "exit_step": 206,
+    "pl": 80.00000000001819,
+    "timestamp": "2025-05-15T16:33:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3223.1,
+    "entry_step": 206,
+    "exit_price": 3221.9,
+    "exit_step": 224,
+    "pl": -119.99999999998181,
+    "timestamp": "2025-05-15T16:15:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3219.9,
+    "entry_step": 225,
+    "exit_price": 3219.4,
+    "exit_step": 227,
+    "pl": -50.0,
+    "timestamp": "2025-05-15T16:12:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3219.8,
+    "entry_step": 228,
+    "exit_price": 3221.3,
+    "exit_step": 233,
+    "pl": 150.0,
+    "timestamp": "2025-05-15T16:06:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3221.5,
+    "entry_step": 236,
+    "exit_price": 3222.0,
+    "exit_step": 242,
+    "pl": 50.0,
+    "timestamp": "2025-05-15T15:57:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 2,
+    "entry_price": 3218.8,
+    "entry_step": 244,
+    "exit_price": 3218.4,
+    "exit_step": 257,
+    "pl": -80.00000000001819,
+    "timestamp": "2025-05-15T15:42:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3234.6,
+    "entry_step": 0,
+    "exit_price": 3228.9,
+    "exit_step": 168,
+    "pl": -569.9999999999818,
+    "timestamp": "2025-05-15T17:11:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3230.3,
+    "entry_step": 169,
+    "exit_price": 3228.0,
+    "exit_step": 179,
+    "pl": -230.0000000000182,
+    "timestamp": "2025-05-15T17:00:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3225.4,
+    "entry_step": 186,
+    "exit_price": 3224.7,
+    "exit_step": 202,
+    "pl": -70.00000000002728,
+    "timestamp": "2025-05-15T16:37:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3224.6,
+    "entry_step": 207,
+    "exit_price": 3222.3,
+    "exit_step": 214,
+    "pl": 229.99999999997272,
+    "timestamp": "2025-05-15T16:25:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3223.1,
+    "entry_step": 217,
+    "exit_price": 3219.2,
+    "exit_step": 260,
+    "pl": -390.0000000000091,
+    "timestamp": "2025-05-15T15:39:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3220.0,
+    "entry_step": 260,
+    "exit_price": 3195.4,
+    "exit_step": 362,
+    "pl": 2459.999999999991,
+    "timestamp": "2025-05-15T13:57:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3195.8,
+    "entry_step": 364,
+    "exit_price": 3192.7,
+    "exit_step": 374,
+    "pl": -310.0000000000364,
+    "timestamp": "2025-05-15T13:45:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3194.0,
+    "entry_step": 387,
+    "exit_price": 3196.2,
+    "exit_step": 389,
+    "pl": 219.9999999999818,
+    "timestamp": "2025-05-15T13:30:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3195.5,
+    "entry_step": 389,
+    "exit_price": 3185.9,
+    "exit_step": 439,
+    "pl": 959.9999999999909,
+    "timestamp": "2025-05-15T12:40:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3188.8,
+    "entry_step": 443,
+    "exit_price": 3189.6,
+    "exit_step": 459,
+    "pl": -79.99999999997272,
+    "timestamp": "2025-05-15T12:20:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3182.4,
+    "entry_step": 460,
+    "exit_price": 3181.5,
+    "exit_step": 493,
+    "pl": 90.0000000000091,
+    "timestamp": "2025-05-15T11:46:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3234.6,
+    "entry_step": 0,
+    "exit_price": 3233.2,
+    "exit_step": 10,
+    "pl": 140.0000000000091,
+    "timestamp": "2025-05-15T19:49:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3233.5,
+    "entry_step": 19,
+    "exit_price": 3228.8,
+    "exit_step": 81,
+    "pl": -469.9999999999818,
+    "timestamp": "2025-05-15T18:38:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3228.5,
+    "entry_step": 81,
+    "exit_price": 3222.0,
+    "exit_step": 242,
+    "pl": -650.0,
+    "timestamp": "2025-05-15T15:57:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3221.4,
+    "entry_step": 242,
+    "exit_price": 3215.0,
+    "exit_step": 279,
+    "pl": 640.0000000000091,
+    "timestamp": "2025-05-15T15:20:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3213.0,
+    "entry_step": 284,
+    "exit_price": 3213.2,
+    "exit_step": 289,
+    "pl": -19.99999999998181,
+    "timestamp": "2025-05-15T15:10:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3211.9,
+    "entry_step": 291,
+    "exit_price": 3204.8,
+    "exit_step": 318,
+    "pl": -709.9999999999909,
+    "timestamp": "2025-05-15T14:41:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3207.2,
+    "entry_step": 318,
+    "exit_price": 3205.7,
+    "exit_step": 340,
+    "pl": 150.0,
+    "timestamp": "2025-05-15T14:19:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3205.5,
+    "entry_step": 343,
+    "exit_price": 3207.3,
+    "exit_step": 348,
+    "pl": -180.0000000000182,
+    "timestamp": "2025-05-15T14:11:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3201.8,
+    "entry_step": 351,
+    "exit_price": 3195.7,
+    "exit_step": 384,
+    "pl": -610.0000000000364,
+    "timestamp": "2025-05-15T13:35:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3195.8,
+    "entry_step": 385,
+    "exit_price": 3181.4,
+    "exit_step": 479,
+    "pl": 1440.000000000009,
+    "timestamp": "2025-05-15T12:00:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 2,
+    "entry_price": 3182.3,
+    "entry_step": 479,
+    "exit_price": 3181.3,
+    "exit_step": 489,
+    "pl": -200.0,
+    "timestamp": "2025-05-15T11:50:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3234.1,
+    "entry_step": 7,
+    "exit_price": 3233.5,
+    "exit_step": 11,
+    "pl": 59.999999999990905,
+    "timestamp": "2025-05-15T19:48:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3233.5,
+    "entry_step": 14,
+    "exit_price": 3232.2,
+    "exit_step": 29,
+    "pl": 130.0000000000182,
+    "timestamp": "2025-05-15T19:30:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3233.5,
+    "entry_step": 30,
+    "exit_price": 3232.3,
+    "exit_step": 34,
+    "pl": -119.99999999998181,
+    "timestamp": "2025-05-15T19:25:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3230.9,
+    "entry_step": 36,
+    "exit_price": 3227.8,
+    "exit_step": 43,
+    "pl": 309.9999999999909,
+    "timestamp": "2025-05-15T19:16:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3227.2,
+    "entry_step": 46,
+    "exit_price": 3225.9,
+    "exit_step": 62,
+    "pl": -129.99999999997272,
+    "timestamp": "2025-05-15T18:57:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3225.0,
+    "entry_step": 64,
+    "exit_price": 3226.1,
+    "exit_step": 66,
+    "pl": -109.9999999999909,
+    "timestamp": "2025-05-15T18:53:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 2,
+    "entry_price": 3228.0,
+    "entry_step": 72,
+    "exit_price": 3227.8,
+    "exit_step": 74,
+    "pl": -39.99999999996362,
+    "timestamp": "2025-05-15T18:45:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3228.5,
+    "entry_step": 74,
+    "exit_price": 3227.1,
+    "exit_step": 88,
+    "pl": -140.0000000000091,
+    "timestamp": "2025-05-15T18:31:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3228.2,
+    "entry_step": 99,
+    "exit_price": 3231.0,
+    "exit_step": 172,
+    "pl": -280.0000000000182,
+    "timestamp": "2025-05-15T17:07:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 2,
+    "entry_price": 3231.2,
+    "entry_step": 172,
+    "exit_price": 3223.0,
+    "exit_step": 192,
+    "pl": -1639.9999999999636,
+    "timestamp": "2025-05-15T16:47:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3225.7,
+    "entry_step": 199,
+    "exit_price": 3219.9,
+    "exit_step": 226,
+    "pl": -579.9999999999727,
+    "timestamp": "2025-05-15T16:13:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3219.4,
+    "entry_step": 226,
+    "exit_price": 3220.0,
+    "exit_step": 261,
+    "pl": 59.999999999990905,
+    "timestamp": "2025-05-15T15:38:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3218.8,
+    "entry_step": 261,
+    "exit_price": 3198.5,
+    "exit_step": 354,
+    "pl": 2030.0000000000182,
+    "timestamp": "2025-05-15T14:05:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3196.1,
+    "entry_step": 357,
+    "exit_price": 3192.6,
+    "exit_step": 415,
+    "pl": -350.0,
+    "timestamp": "2025-05-15T13:04:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3193.6,
+    "entry_step": 415,
+    "exit_price": 3192.1,
+    "exit_step": 418,
+    "pl": -150.0,
+    "timestamp": "2025-05-15T13:01:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3190.1,
+    "entry_step": 424,
+    "exit_price": 3187.0,
+    "exit_step": 448,
+    "pl": 309.9999999999909,
+    "timestamp": "2025-05-15T12:31:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3186.3,
+    "entry_step": 450,
+    "exit_price": 3184.5,
+    "exit_step": 453,
+    "pl": -180.0000000000182,
+    "timestamp": "2025-05-15T12:26:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3185.2,
+    "entry_step": 453,
+    "exit_price": 3184.8,
+    "exit_step": 457,
+    "pl": -39.99999999996362,
+    "timestamp": "2025-05-15T12:22:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3185.6,
+    "entry_step": 457,
+    "exit_price": 3181.4,
+    "exit_step": 463,
+    "pl": -419.9999999999818,
+    "timestamp": "2025-05-15T12:16:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3182.1,
+    "entry_step": 463,
+    "exit_price": 3183.3,
+    "exit_step": 465,
+    "pl": 120.00000000002728,
+    "timestamp": "2025-05-15T12:14:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3183.1,
+    "entry_step": 466,
+    "exit_price": 3178.1,
+    "exit_step": 498,
+    "pl": 500.0,
+    "timestamp": "2025-05-15T11:41:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3234.0,
+    "entry_step": 2,
+    "exit_price": 3233.5,
+    "exit_step": 11,
+    "pl": -50.0,
+    "timestamp": "2025-05-15T19:48:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 2,
+    "entry_price": 3233.5,
+    "entry_step": 11,
+    "exit_price": 3228.6,
+    "exit_step": 41,
+    "pl": -980.0000000000182,
+    "timestamp": "2025-05-15T19:18:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3227.8,
+    "entry_step": 42,
+    "exit_price": 3227.3,
+    "exit_step": 44,
+    "pl": -50.0,
+    "timestamp": "2025-05-15T19:15:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3226.8,
+    "entry_step": 47,
+    "exit_price": 3226.6,
+    "exit_step": 49,
+    "pl": -20.000000000027285,
+    "timestamp": "2025-05-15T19:10:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3226.9,
+    "entry_step": 50,
+    "exit_price": 3227.5,
+    "exit_step": 52,
+    "pl": -59.999999999990905,
+    "timestamp": "2025-05-15T19:07:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3226.8,
+    "entry_step": 52,
+    "exit_price": 3225.8,
+    "exit_step": 116,
+    "pl": 100.0,
+    "timestamp": "2025-05-15T18:03:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3224.4,
+    "entry_step": 118,
+    "exit_price": 3220.9,
+    "exit_step": 232,
+    "pl": -350.0,
+    "timestamp": "2025-05-15T16:07:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3221.3,
+    "entry_step": 232,
+    "exit_price": 3204.0,
+    "exit_step": 316,
+    "pl": -1730.0000000000182,
+    "timestamp": "2025-05-15T14:43:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -2,
+    "entry_price": 3204.1,
+    "entry_step": 316,
+    "exit_price": 3205.5,
+    "exit_step": 328,
+    "pl": -280.0000000000182,
+    "timestamp": "2025-05-15T14:31:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3209.2,
+    "entry_step": 330,
+    "exit_price": 3207.3,
+    "exit_step": 348,
+    "pl": 189.99999999996362,
+    "timestamp": "2025-05-15T14:11:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3208.3,
+    "entry_step": 349,
+    "exit_price": 3195.1,
+    "exit_step": 360,
+    "pl": -1320.0000000000273,
+    "timestamp": "2025-05-15T13:59:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3195.4,
+    "entry_step": 361,
+    "exit_price": 3195.8,
+    "exit_step": 365,
+    "pl": 40.000000000009095,
+    "timestamp": "2025-05-15T13:54:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3192.7,
+    "entry_step": 373,
+    "exit_price": 3200.0,
+    "exit_step": 398,
+    "pl": 730.0000000000182,
+    "timestamp": "2025-05-15T13:21:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3200.6,
+    "entry_step": 402,
+    "exit_price": 3196.8,
+    "exit_step": 407,
+    "pl": 379.9999999999727,
+    "timestamp": "2025-05-15T13:12:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3194.1,
+    "entry_step": 411,
+    "exit_price": 3190.1,
+    "exit_step": 425,
+    "pl": -400.0,
+    "timestamp": "2025-05-15T12:54:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3185.6,
+    "entry_step": 431,
+    "exit_price": 3189.3,
+    "exit_step": 446,
+    "pl": -370.0000000000273,
+    "timestamp": "2025-05-15T12:33:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3188.0,
+    "entry_step": 449,
+    "exit_price": 3186.3,
+    "exit_step": 451,
+    "pl": -169.9999999999818,
+    "timestamp": "2025-05-15T12:28:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3184.8,
+    "entry_step": 456,
+    "exit_price": 3185.6,
+    "exit_step": 458,
+    "pl": 79.99999999997272,
+    "timestamp": "2025-05-15T12:21:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3181.8,
+    "entry_step": 461,
+    "exit_price": 3181.4,
+    "exit_step": 463,
+    "pl": 40.000000000009095,
+    "timestamp": "2025-05-15T12:16:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3182.1,
+    "entry_step": 463,
+    "exit_price": 3183.9,
+    "exit_step": 468,
+    "pl": 180.0000000000182,
+    "timestamp": "2025-05-15T12:11:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3185.4,
+    "entry_step": 471,
+    "exit_price": 3181.4,
+    "exit_step": 494,
+    "pl": 400.0,
+    "timestamp": "2025-05-15T11:45:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3233.4,
+    "entry_step": 6,
+    "exit_price": 3233.8,
+    "exit_step": 16,
+    "pl": 40.000000000009095,
+    "timestamp": "2025-05-15T19:43:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3234.7,
+    "entry_step": 1,
+    "exit_price": 3233.4,
+    "exit_step": 7,
+    "pl": -129.99999999997272,
+    "timestamp": "2025-05-15T19:52:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3234.1,
+    "entry_step": 7,
+    "exit_price": 3233.2,
+    "exit_step": 10,
+    "pl": 90.0000000000091,
+    "timestamp": "2025-05-15T19:49:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3233.7,
+    "entry_step": 12,
+    "exit_price": 3233.6,
+    "exit_step": 17,
+    "pl": -9.999999999990905,
+    "timestamp": "2025-05-15T19:42:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3233.6,
+    "entry_step": 17,
+    "exit_price": 3227.8,
+    "exit_step": 43,
+    "pl": 579.9999999999727,
+    "timestamp": "2025-05-15T19:16:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3227.2,
+    "entry_step": 46,
+    "exit_price": 3225.6,
+    "exit_step": 57,
+    "pl": -159.9999999999909,
+    "timestamp": "2025-05-15T19:02:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3226.7,
+    "entry_step": 57,
+    "exit_price": 3227.3,
+    "exit_step": 59,
+    "pl": -60.00000000003638,
+    "timestamp": "2025-05-15T19:00:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3226.4,
+    "entry_step": 60,
+    "exit_price": 3225.0,
+    "exit_step": 65,
+    "pl": 140.0000000000091,
+    "timestamp": "2025-05-15T18:54:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3226.3,
+    "entry_step": 68,
+    "exit_price": 3226.5,
+    "exit_step": 151,
+    "pl": -19.99999999998181,
+    "timestamp": "2025-05-15T17:28:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3226.4,
+    "entry_step": 151,
+    "exit_price": 3218.8,
+    "exit_step": 245,
+    "pl": 759.9999999999909,
+    "timestamp": "2025-05-15T15:54:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3219.5,
+    "entry_step": 245,
+    "exit_price": 3218.7,
+    "exit_step": 248,
+    "pl": 80.00000000001819,
+    "timestamp": "2025-05-15T15:51:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -2,
+    "entry_price": 3218.7,
+    "entry_step": 248,
+    "exit_price": 3216.0,
+    "exit_step": 267,
+    "pl": 539.9999999999636,
+    "timestamp": "2025-05-15T15:32:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3217.4,
+    "entry_step": 268,
+    "exit_price": 3213.8,
+    "exit_step": 290,
+    "pl": -359.9999999999909,
+    "timestamp": "2025-05-15T15:09:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -2,
+    "entry_price": 3209.7,
+    "entry_step": 295,
+    "exit_price": 3206.5,
+    "exit_step": 304,
+    "pl": 639.9999999999636,
+    "timestamp": "2025-05-15T14:55:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3205.5,
+    "entry_step": 307,
+    "exit_price": 3204.1,
+    "exit_step": 317,
+    "pl": 140.0000000000091,
+    "timestamp": "2025-05-15T14:42:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3207.2,
+    "entry_step": 318,
+    "exit_price": 3206.1,
+    "exit_step": 320,
+    "pl": -109.9999999999909,
+    "timestamp": "2025-05-15T14:39:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 2,
+    "entry_price": 3205.2,
+    "entry_step": 320,
+    "exit_price": 3195.2,
+    "exit_step": 369,
+    "pl": -2000.0,
+    "timestamp": "2025-05-15T13:50:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3194.3,
+    "entry_step": 371,
+    "exit_price": 3199.7,
+    "exit_step": 381,
+    "pl": -539.9999999999636,
+    "timestamp": "2025-05-15T13:38:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3195.7,
+    "entry_step": 383,
+    "exit_price": 3194.0,
+    "exit_step": 388,
+    "pl": -169.9999999999818,
+    "timestamp": "2025-05-15T13:31:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3195.5,
+    "entry_step": 389,
+    "exit_price": 3200.0,
+    "exit_step": 398,
+    "pl": 450.0,
+    "timestamp": "2025-05-15T13:21:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3199.1,
+    "entry_step": 399,
+    "exit_price": 3194.1,
+    "exit_step": 412,
+    "pl": -500.0,
+    "timestamp": "2025-05-15T13:07:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3193.9,
+    "entry_step": 412,
+    "exit_price": 3194.1,
+    "exit_step": 414,
+    "pl": 19.99999999998181,
+    "timestamp": "2025-05-15T13:05:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3193.6,
+    "entry_step": 416,
+    "exit_price": 3184.0,
+    "exit_step": 455,
+    "pl": -959.9999999999909,
+    "timestamp": "2025-05-15T12:24:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3186.4,
+    "entry_step": 455,
+    "exit_price": 3180.7,
+    "exit_step": 488,
+    "pl": 570.0000000000273,
+    "timestamp": "2025-05-15T11:51:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -2,
+    "entry_price": 3180.1,
+    "entry_step": 489,
+    "exit_price": 3181.4,
+    "exit_step": 494,
+    "pl": -260.0000000000364,
+    "timestamp": "2025-05-15T11:45:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -2,
+    "entry_price": 3234.6,
+    "entry_step": 0,
+    "exit_price": 3233.7,
+    "exit_step": 13,
+    "pl": 180.0000000000182,
+    "timestamp": "2025-05-15T19:46:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3233.6,
+    "entry_step": 17,
+    "exit_price": 3232.9,
+    "exit_step": 19,
+    "pl": -69.99999999998181,
+    "timestamp": "2025-05-15T19:40:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -2,
+    "entry_price": 3233.6,
+    "entry_step": 20,
+    "exit_price": 3232.3,
+    "exit_step": 34,
+    "pl": 259.99999999994543,
+    "timestamp": "2025-05-15T19:25:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3228.5,
+    "entry_step": 38,
+    "exit_price": 3226.4,
+    "exit_step": 67,
+    "pl": -209.9999999999909,
+    "timestamp": "2025-05-15T18:52:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3226.1,
+    "entry_step": 69,
+    "exit_price": 3230.1,
+    "exit_step": 169,
+    "pl": 400.0,
+    "timestamp": "2025-05-15T17:10:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3230.3,
+    "entry_step": 169,
+    "exit_price": 3231.0,
+    "exit_step": 171,
+    "pl": -69.99999999998181,
+    "timestamp": "2025-05-15T17:08:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3229.2,
+    "entry_step": 175,
+    "exit_price": 3224.6,
+    "exit_step": 182,
+    "pl": 459.9999999999909,
+    "timestamp": "2025-05-15T16:57:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -2,
+    "entry_price": 3223.6,
+    "entry_step": 183,
+    "exit_price": 3223.4,
+    "exit_step": 220,
+    "pl": 39.99999999996362,
+    "timestamp": "2025-05-15T16:19:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3222.8,
+    "entry_step": 220,
+    "exit_price": 3221.9,
+    "exit_step": 224,
+    "pl": 90.0000000000091,
+    "timestamp": "2025-05-15T16:15:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3219.5,
+    "entry_step": 227,
+    "exit_price": 3209.1,
+    "exit_step": 298,
+    "pl": -1040.000000000009,
+    "timestamp": "2025-05-15T15:01:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3209.0,
+    "entry_step": 299,
+    "exit_price": 3208.5,
+    "exit_step": 301,
+    "pl": 50.0,
+    "timestamp": "2025-05-15T14:58:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3233.8,
+    "entry_step": 5,
+    "exit_price": 3234.1,
+    "exit_step": 8,
+    "pl": 29.999999999972715,
+    "timestamp": "2025-05-15T19:51:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3233.5,
+    "entry_step": 10,
+    "exit_price": 3231.7,
+    "exit_step": 26,
+    "pl": 180.0000000000182,
+    "timestamp": "2025-05-15T19:33:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3231.6,
+    "entry_step": 27,
+    "exit_price": 3232.2,
+    "exit_step": 29,
+    "pl": 59.999999999990905,
+    "timestamp": "2025-05-15T19:30:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3232.9,
+    "entry_step": 32,
+    "exit_price": 3226.7,
+    "exit_step": 50,
+    "pl": -620.0000000000273,
+    "timestamp": "2025-05-15T19:09:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3227.5,
+    "entry_step": 51,
+    "exit_price": 3223.5,
+    "exit_step": 149,
+    "pl": 400.0,
+    "timestamp": "2025-05-15T17:30:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -2,
+    "entry_price": 3225.9,
+    "entry_step": 149,
+    "exit_price": 3223.8,
+    "exit_step": 191,
+    "pl": 419.9999999999818,
+    "timestamp": "2025-05-15T16:48:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3223.0,
+    "entry_step": 191,
+    "exit_price": 3223.4,
+    "exit_step": 220,
+    "pl": 40.000000000009095,
+    "timestamp": "2025-05-15T16:19:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3222.5,
+    "entry_step": 221,
+    "exit_price": 3221.9,
+    "exit_step": 224,
+    "pl": -59.999999999990905,
+    "timestamp": "2025-05-15T16:15:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 2,
+    "entry_price": 3219.9,
+    "entry_step": 230,
+    "exit_price": 3221.3,
+    "exit_step": 233,
+    "pl": 280.0000000000182,
+    "timestamp": "2025-05-15T16:06:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3220.9,
+    "entry_step": 235,
+    "exit_price": 3216.3,
+    "exit_step": 268,
+    "pl": 459.9999999999909,
+    "timestamp": "2025-05-15T15:31:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3217.4,
+    "entry_step": 268,
+    "exit_price": 3211.9,
+    "exit_step": 292,
+    "pl": 550.0,
+    "timestamp": "2025-05-15T15:07:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3209.1,
+    "entry_step": 296,
+    "exit_price": 3205.1,
+    "exit_step": 306,
+    "pl": 400.0,
+    "timestamp": "2025-05-15T14:53:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3205.6,
+    "entry_step": 306,
+    "exit_price": 3207.6,
+    "exit_step": 311,
+    "pl": 200.0,
+    "timestamp": "2025-05-15T14:48:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3204.5,
+    "entry_step": 314,
+    "exit_price": 3202.1,
+    "exit_step": 323,
+    "pl": 240.0000000000091,
+    "timestamp": "2025-05-15T14:36:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3201.9,
+    "entry_step": 323,
+    "exit_price": 3207.5,
+    "exit_step": 330,
+    "pl": 559.9999999999909,
+    "timestamp": "2025-05-15T14:29:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3205.7,
+    "entry_step": 339,
+    "exit_price": 3194.3,
+    "exit_step": 372,
+    "pl": 1139.9999999999636,
+    "timestamp": "2025-05-15T13:47:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3193.2,
+    "entry_step": 372,
+    "exit_price": 3192.7,
+    "exit_step": 374,
+    "pl": -50.0,
+    "timestamp": "2025-05-15T13:45:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3191.4,
+    "entry_step": 374,
+    "exit_price": 3196.9,
+    "exit_step": 378,
+    "pl": -550.0,
+    "timestamp": "2025-05-15T13:41:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -2,
+    "entry_price": 3196.9,
+    "entry_step": 378,
+    "exit_price": 3193.1,
+    "exit_step": 385,
+    "pl": 760.0000000000364,
+    "timestamp": "2025-05-15T13:34:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3195.8,
+    "entry_step": 385,
+    "exit_price": 3198.7,
+    "exit_step": 401,
+    "pl": -289.9999999999636,
+    "timestamp": "2025-05-15T13:18:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -2,
+    "entry_price": 3201.8,
+    "entry_step": 403,
+    "exit_price": 3189.7,
+    "exit_step": 424,
+    "pl": 2420.0000000000728,
+    "timestamp": "2025-05-15T12:55:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3190.1,
+    "entry_step": 424,
+    "exit_price": 3188.8,
+    "exit_step": 444,
+    "pl": 129.99999999997272,
+    "timestamp": "2025-05-15T12:35:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3189.3,
+    "entry_step": 444,
+    "exit_price": 3186.4,
+    "exit_step": 456,
+    "pl": -290.0000000000091,
+    "timestamp": "2025-05-15T12:23:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 2,
+    "entry_price": 3233.7,
+    "entry_step": 12,
+    "exit_price": 3233.6,
+    "exit_step": 17,
+    "pl": -19.99999999998181,
+    "timestamp": "2025-05-15T19:42:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3233.6,
+    "entry_step": 17,
+    "exit_price": 3231.0,
+    "exit_step": 27,
+    "pl": 259.9999999999909,
+    "timestamp": "2025-05-15T19:32:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3232.2,
+    "entry_step": 28,
+    "exit_price": 3232.7,
+    "exit_step": 32,
+    "pl": -50.0,
+    "timestamp": "2025-05-15T19:27:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3231.6,
+    "entry_step": 35,
+    "exit_price": 3230.9,
+    "exit_step": 37,
+    "pl": -69.99999999998181,
+    "timestamp": "2025-05-15T19:22:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3227.9,
+    "entry_step": 41,
+    "exit_price": 3225.6,
+    "exit_step": 57,
+    "pl": -230.0000000000182,
+    "timestamp": "2025-05-15T19:02:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3227.3,
+    "entry_step": 58,
+    "exit_price": 3226.9,
+    "exit_step": 60,
+    "pl": 40.000000000009095,
+    "timestamp": "2025-05-15T18:59:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3226.4,
+    "entry_step": 66,
+    "exit_price": 3226.3,
+    "exit_step": 69,
+    "pl": -9.999999999990905,
+    "timestamp": "2025-05-15T18:50:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3226.2,
+    "entry_step": 70,
+    "exit_price": 3228.0,
+    "exit_step": 73,
+    "pl": -180.0000000000182,
+    "timestamp": "2025-05-15T18:46:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3229.0,
+    "entry_step": 75,
+    "exit_price": 3228.2,
+    "exit_step": 78,
+    "pl": -80.00000000001819,
+    "timestamp": "2025-05-15T18:41:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3228.3,
+    "entry_step": 78,
+    "exit_price": 3227.3,
+    "exit_step": 110,
+    "pl": -100.0,
+    "timestamp": "2025-05-15T18:09:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3233.8,
+    "entry_step": 5,
+    "exit_price": 3234.1,
+    "exit_step": 8,
+    "pl": -29.999999999972715,
+    "timestamp": "2025-05-15T19:51:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3233.2,
+    "entry_step": 9,
+    "exit_price": 3233.5,
+    "exit_step": 15,
+    "pl": 30.00000000001819,
+    "timestamp": "2025-05-15T19:44:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3233.6,
+    "entry_step": 17,
+    "exit_price": 3233.6,
+    "exit_step": 21,
+    "pl": 0.0,
+    "timestamp": "2025-05-15T19:38:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3234.6,
+    "entry_step": 0,
+    "exit_price": 3234.0,
+    "exit_step": 3,
+    "pl": -59.999999999990905,
+    "timestamp": "2025-05-15T19:56:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3233.6,
+    "entry_step": 4,
+    "exit_price": 3233.5,
+    "exit_step": 15,
+    "pl": 9.999999999990905,
+    "timestamp": "2025-05-15T19:44:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3233.8,
+    "entry_step": 15,
+    "exit_price": 3191.4,
+    "exit_step": 375,
+    "pl": -4240.000000000009,
+    "timestamp": "2025-05-15T13:44:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3196.9,
+    "entry_step": 377,
+    "exit_price": 3197.7,
+    "exit_step": 380,
+    "pl": 79.99999999997272,
+    "timestamp": "2025-05-15T13:39:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3197.6,
+    "entry_step": 381,
+    "exit_price": 3185.1,
+    "exit_step": 433,
+    "pl": -1250.0,
+    "timestamp": "2025-05-15T12:46:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3234.0,
+    "entry_step": 2,
+    "exit_price": 3233.8,
+    "exit_step": 6,
+    "pl": 19.99999999998181,
+    "timestamp": "2025-05-15T19:53:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3234.6,
+    "entry_step": 0,
+    "exit_price": 3233.7,
+    "exit_step": 13,
+    "pl": 90.0000000000091,
+    "timestamp": "2025-05-15T19:46:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3233.5,
+    "entry_step": 3,
+    "exit_price": 3226.8,
+    "exit_step": 48,
+    "pl": -669.9999999999818,
+    "timestamp": "2025-05-15T19:11:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": 1,
+    "entry_price": 3234.1,
+    "entry_step": 7,
+    "exit_price": 3231.7,
+    "exit_step": 26,
+    "pl": -240.0000000000091,
+    "timestamp": "2025-05-15T19:33:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3232.8,
+    "entry_step": 29,
+    "exit_price": 3232.9,
+    "exit_step": 33,
+    "pl": -9.999999999990905,
+    "timestamp": "2025-05-15T19:26:00+00:00"
+  },
+  {
+    "asset": "GC2",
+    "contracts": -1,
+    "entry_price": 3232.2,
+    "entry_step": 34,
+    "exit_price": 3230.9,
+    "exit_step": 37,
+    "pl": 129.99999999997272,
+    "timestamp": "2025-05-15T19:22:00+00:00"
+  }
+]
