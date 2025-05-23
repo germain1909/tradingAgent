@@ -21,9 +21,30 @@ class FuturesTradingEnv(gym.Env):
         # Action space: Discrete number of contracts to buy (negative for sell)
         self.action_space = spaces.Box(low=-10, high=10, shape=(1,), dtype=np.int32)
 
+        # ——————————————————————————————————————————————
+        # Build your feature list (order must match exactly what you engineered)
+        self.feature_cols = [
+            "price",       # raw price
+            "balance",     # cash on hand
+
+            # 1-minute indicators
+            "ema_50", "ema_200", "vwap", "rsi_1m",
+
+            # 5-minute indicators
+            "ema_7_5m", "ema_17_5m", "ema_33_5m",
+            "macd_5m", "macd_signal_5m", "macd_hist_5m",
+            "rsi_5m", "rsi_ma_5m",
+
+            # 15-minute indicators
+            "macd_15m", "macd_signal_15m", "macd_hist_15m",
+        ]
+
         # Observation space: example - price and cash balance
         self.observation_space = spaces.Box(
-            low=0, high=np.inf, shape=(2,), dtype=np.float32
+        low=-np.inf,
+        high=np.inf,
+        shape=(len(self.feature_cols),),
+        dtype=np.float32
         )
 
         self.current_step = 0
@@ -51,9 +72,17 @@ class FuturesTradingEnv(gym.Env):
         return self._get_obs()
 
     def _get_obs(self):
-        # Example observation: current price and cash balance
-        price = self.data.loc[self.current_step, "price"]
-        return np.array([price, self.balance], dtype=np.float32)
+        # pull the current row of data
+        row = self.data.iloc[self.current_step]
+
+        # start with price & cash balance
+        obs = [row["price"], self.balance]
+
+        # append each engineered feature in order
+        for feat in self.feature_cols[2:]:
+            obs.append(row[feat])
+
+        return np.array(obs, dtype=np.float32)
 
     def step(self, action):
         # a) if already done
