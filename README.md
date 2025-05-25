@@ -86,3 +86,14 @@ python -m training.train_macd_agent.py
 
 
 ## Germain
+
+## changes to rollout for low number of runs
+agent.train(total_timesteps=20, callback=trade_cb)
+
+agent = PPOTradingAgent(
+    env_class=FuturesTradingEnv,
+    env_kwargs=env_kwargs,
+    verbose=1,
+    n_steps=20,            # collect only 20 steps per rollout
+    batch_size=10,         # and you can shrink batch size if you like
+)

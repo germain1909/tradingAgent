@@ -60,6 +60,15 @@ def train_and_save_model():
         df5["rsi_5m"]    = compute_rsi(df5["price"], length=10)
         df5["rsi_ma_5m"] = df5["rsi_5m"].rolling(3).mean()
 
+        # flag crosses:
+        #   +1 when MACD goes from ≤signal→>signal (bullish)
+        #   -1 when MACD goes from ≥signal→<signal (bearish)
+        df5["macd_cross"] = 0
+        df5.loc[(macd_5.shift(1) <= sig_5.shift(1)) & (macd_5 > sig_5), "macd_cross"] = +1
+        df5.loc[(macd_5.shift(1) >= sig_5.shift(1)) & (macd_5 < sig_5), "macd_cross"] = -1
+
+
+
         # 3) 15-min bars + MACD
         df15 = df[["open","high","low","price","volume"]].resample("15T").agg({
             "open":"first","high":"max","low":"min","price":"last","volume":"sum"
@@ -76,11 +85,11 @@ def train_and_save_model():
         for col in df5.columns:   df[col]  = df5[col].reindex(df.index, method="ffill")
         for col in df15.columns:  df[col]  = df15[col].reindex(df.index, method="ffill")
         df.dropna(inplace=True)
-        df.reset_index(inplace=True)
 
         # C. Reset Index and ADD SYMBOL
         # bring datetime back as a column for the env
         df.reset_index(inplace=True)
+        print(df.dtypes)
         print("Columns after reset_index:", df.columns.tolist())
 
         # Add Symbol
@@ -95,11 +104,11 @@ def train_and_save_model():
         
         
         # D. Prepare environment kwargs, adjust depending on your env's __init__ signature
-        env_kwargs = {"data": df}
+        env_kwargs = {"data": df, "max_daily_trades": 5,}
         print ('kwargs added')
 
         # Initialize the PPO agent with your custom environment class and kwargs
-        agent = PPOTradingAgent(env_class=FuturesTradingEnv, env_kwargs=env_kwargs, verbose=1)
+        agent = PPOTradingAgent(env_class=FuturesTradingEnv, env_kwargs=env_kwargs, verbose=1, n_steps=1000, batch_size=10,)
 
         # Instantiate with verbose=1 for real-time prints
         trade_cb = TradeLoggingJSONCallback(
@@ -108,7 +117,7 @@ def train_and_save_model():
         )
 
         # Train the agent
-        agent.train(total_timesteps=10000,callback=trade_cb)
+        agent.train(total_timesteps=1000,callback=trade_cb)
         print("Training completed.")
 
         # Save the trained model
