@@ -17,12 +17,20 @@ class TradeLoggingJSONCallback(BaseCallback):
                 self.trade_log.append(tr)
                 # 2) update aggregate
                 self.aggregate_pl += tr["pl"]
-                # 3) print both
+
+                # 3) decode the macd cross flag
+                mc = tr.get("macd_cross_5m", 0)
+                if mc ==  1: cross_str = "bullish"
+                elif mc == -1: cross_str = "bearish"
+                else:         cross_str = "none"
+
+                # 4) print everything
                 if self.verbose:
                     print(
                         f"[Trade Closed] {tr['asset']} | "
                         f"{tr['contracts']} @ {tr['entry_price']} → {tr['exit_price']} | "
                         f"Trade P/L={tr['pl']:.2f} | "
+                        f"MACD={cross_str} | "
                         f"Aggregate P/L={self.aggregate_pl:.2f} | "
                         f"Time={tr['timestamp']}"
                     )

@@ -15,11 +15,12 @@ def train_and_save_model():
         #A.Data Prep
         # Load or prepare your futures data here (Pandas DataFrame)
         #data = pd.read_csv('data/futures_data.csv')  # Replace with your actual data path
-        json_path = "sample_data/sample_1min.json"
+        json_path = "sample_data/sample_1min_5_19.json"
 
         with open(json_path, "r") as f:
             raw = json.load(f)
-        bars = raw["bars"]
+            # reverse bars because topstep returns data last first
+        bars = raw["bars"][::-1]
         df = pd.DataFrame(bars).rename(columns={
             "t": "datetime",  # original timestamp field
             "o": "open",
@@ -57,6 +58,14 @@ def train_and_save_model():
         df5["macd_5m"]        = macd_5
         df5["macd_signal_5m"] = sig_5
         df5["macd_hist_5m"]   = macd_5 - sig_5
+
+        # 2) Flag the cross of MACD line over/under its signal line
+        df5["macd_cross_5m"] = 0
+        # bullish cross: MACD went from ≤signal → >signal
+        df5.loc[(macd_5.shift(1) <= sig_5.shift(1)) & (macd_5 > sig_5),"macd_cross_5m"] = +1
+        # bearish cross: MACD went from ≥signal → <signal
+        df5.loc[(macd_5.shift(1) >= sig_5.shift(1)) & (macd_5 < sig_5),"macd_cross_5m"] = -1
+
         df5["rsi_5m"]    = compute_rsi(df5["price"], length=10)
         df5["rsi_ma_5m"] = df5["rsi_5m"].rolling(3).mean()
 
@@ -73,7 +82,13 @@ def train_and_save_model():
         df15["macd_hist_15m"]   = macd_15 - sig_15
 
         # 4) merge back & reset index → datetime column returns
-        for col in df5.columns:   df[col]  = df5[col].reindex(df.index, method="ffill")
+        five_min_feats = [
+             "ema_7_5m","ema_17_5m","ema_33_5m",
+             "macd_5m","macd_signal_5m","macd_hist_5m",
+             "rsi_5m","rsi_ma_5m",
+             "macd_cross_5m"           # ← add it here
+        ]
+        for col in five_min_feats: df[col] = df5[col].reindex(df.index, method="ffill")
         for col in df15.columns:  df[col]  = df15[col].reindex(df.index, method="ffill")
         df.dropna(inplace=True)
         df.reset_index(inplace=True)
@@ -99,7 +114,7 @@ def train_and_save_model():
         print ('kwargs added')
 
         # Initialize the PPO agent with your custom environment class and kwargs
-        agent = PPOTradingAgent(env_class=FuturesTradingEnv, env_kwargs=env_kwargs, verbose=1)
+        agent = PPOTradingAgent(env_class=FuturesTradingEnv, env_kwargs=env_kwargs, verbose=1, n_steps=900, batch_size=10)
 
         # Instantiate with verbose=1 for real-time prints
         trade_cb = TradeLoggingJSONCallback(
@@ -108,7 +123,7 @@ def train_and_save_model():
         )
 
         # Train the agent
-        agent.train(total_timesteps=10000,callback=trade_cb)
+        agent.train(total_timesteps=900,callback=trade_cb)
         print("Training completed.")
 
         # Save the trained model
