@@ -116,7 +116,7 @@ class FuturesTradingEnv(gym.Env):
             elif desired < 0 and cross5 != -1:
                 desired = 0
 
-        # c) apply action using the filtered `desired`
+        # c) apply action (use filtered desired) trade_contracts = desired
         trade_contracts = desired
         cost            = trade_contracts * price * 100
         self.position  += trade_contracts
@@ -129,6 +129,7 @@ class FuturesTradingEnv(gym.Env):
                 "contracts":   self.position,
                 "entry_price": price,
                 "entry_step":  self.current_step,
+                "macd_cross":   cross5,
             }
 
         # e) advance time & only end at final bar
@@ -158,6 +159,7 @@ class FuturesTradingEnv(gym.Env):
                 **self._open_trade,
                 "exit_price":  price,
                 "exit_step":   self.current_step,
+                "macd_cross_exit": bar["macd_cross_5m"],
                 "pl":          self._open_trade["contracts"] 
                              * (price - self._open_trade["entry_price"]) * 100,
                 "timestamp":   next_bar["datetime"].isoformat(),

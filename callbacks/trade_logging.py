@@ -30,7 +30,7 @@ class TradeLoggingJSONCallback(BaseCallback):
                         f"[Trade Closed] {tr['asset']} | "
                         f"{tr['contracts']} @ {tr['entry_price']} → {tr['exit_price']} | "
                         f"Trade P/L={tr['pl']:.2f} | "
-                        f"MACD={cross_str} | "
+                        f"MACD entry={tr.get('macd_cross')} exit={tr.get('macd_cross_exit')} | "
                         f"Aggregate P/L={self.aggregate_pl:.2f} | "
                         f"Time={tr['timestamp']}"
                     )

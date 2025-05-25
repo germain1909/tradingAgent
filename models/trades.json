@@ -2,71 +2,37 @@
   {
     "asset": "GC2",
     "contracts": 1,
-    "entry_price": 3228.7,
-    "entry_step": 80,
-    "exit_price": 3228.3,
-    "exit_step": 134,
-    "pl": -39.99999999996362,
-    "timestamp": "2025-05-19T03:14:00+00:00"
-  },
-  {
-    "asset": "GC2",
-    "contracts": 1,
     "entry_price": 3218.1,
-    "entry_step": 207,
-    "exit_price": 3218.1,
-    "exit_step": 210,
-    "pl": 0.0,
-    "timestamp": "2025-05-19T04:30:00+00:00"
-  },
-  {
-    "asset": "GC2",
-    "contracts": -1,
-    "entry_price": 3227.2,
-    "entry_step": 351,
-    "exit_price": 3227.2,
-    "exit_step": 358,
-    "pl": -0.0,
-    "timestamp": "2025-05-19T06:58:00+00:00"
+    "entry_step": 205,
+    "macd_cross": "1",
+    "exit_price": 3219.3,
+    "exit_step": 220,
+    "macd_cross_exit": "0",
+    "pl": 120.00000000002728,
+    "timestamp": "2025-05-19T04:40:00+00:00"
   },
   {
     "asset": "GC2",
     "contracts": 1,
     "entry_price": 3232.3,
-    "entry_step": 360,
-    "exit_price": 3232.1,
-    "exit_step": 378,
-    "pl": -20.000000000027285,
-    "timestamp": "2025-05-19T07:18:00+00:00"
+    "entry_step": 361,
+    "macd_cross": "1",
+    "exit_price": 3232.3,
+    "exit_step": 364,
+    "macd_cross_exit": "1",
+    "pl": 0.0,
+    "timestamp": "2025-05-19T07:04:00+00:00"
   },
   {
     "asset": "GC2",
     "contracts": 1,
-    "entry_price": 3245.0,
-    "entry_step": 592,
-    "exit_price": 3246.6,
-    "exit_step": 614,
-    "pl": 159.9999999999909,
-    "timestamp": "2025-05-19T11:14:00+00:00"
-  },
-  {
-    "asset": "GC2",
-    "contracts": -1,
-    "entry_price": 3244.5,
-    "entry_step": 629,
-    "exit_price": 3246.7,
-    "exit_step": 648,
-    "pl": -219.9999999999818,
-    "timestamp": "2025-05-19T11:48:00+00:00"
-  },
-  {
-    "asset": "GC2",
-    "contracts": 1,
-    "entry_price": 3234.3,
-    "entry_step": 805,
-    "exit_price": 3233.0,
-    "exit_step": 811,
-    "pl": -130.0000000000182,
-    "timestamp": "2025-05-19T14:31:00+00:00"
+    "entry_price": 3238.2,
+    "entry_step": 432,
+    "macd_cross": "1",
+    "exit_price": 3245.2,
+    "exit_step": 530,
+    "macd_cross_exit": "0",
+    "pl": 700.0,
+    "timestamp": "2025-05-19T09:50:00+00:00"
   }
 ]
