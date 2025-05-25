@@ -11,21 +11,29 @@ class PPOTradingAgent:
         model_path=None,     # Optional path to load pretrained model
         policy="MlpPolicy",
         verbose=1,
+        n_envs: int = 1,      # ← how many parallel copies of the env
+        n_steps: int = 2048,  # ← rollout length per update
+        batch_size: int = 64, # ← minibatch size for PPO
         **ppo_kwargs         # Extra PPO hyperparameters like learning_rate, n_steps etc.
     ):
         self.env_class = env_class
         self.env_kwargs = env_kwargs
         self.verbose = verbose
+        self.n_envs = n_envs
+        self.n_steps = n_steps
+        self.batch_size = batch_size
         
-        # Create vectorized env for training
-        self.train_env = DummyVecEnv([lambda: self.env_class(**self.env_kwargs)])
-        
+        # Create a vectorized env with `n_envs` copies
+        self.train_env = DummyVecEnv(
+            [lambda env_kwargs=self.env_kwargs: self.env_class(**env_kwargs)
+            for _ in range(self.n_envs)
+        ])
         if model_path:
             self.model = PPO.load(model_path, env=self.train_env)
             if self.verbose:
                 print(f"Loaded PPO model from {model_path}")
         else:
-            self.model = PPO(policy, env=self.train_env, verbose=verbose, **ppo_kwargs)
+            self.model = PPO(policy, env=self.train_env, verbose=verbose,n_steps=self.n_steps,batch_size=self.batch_size, **ppo_kwargs)
             if self.verbose:
                 print("Initialized new PPO model.")
 

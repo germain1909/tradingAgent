@@ -104,11 +104,10 @@ class FuturesTradingEnv(gym.Env):
         bar       = self.data.iloc[self.current_step]
         price     = bar["price"]
         prev_pos  = self.position
-        cross5   = bar["macd_cross_5m"]
+        cross5    = bar["macd_cross_5m"]
 
         # desired from the agent
         desired = int(action[0])
-
 
         # only allow new entries on a MACD cross
         if prev_pos == 0 and desired != 0:
@@ -117,8 +116,8 @@ class FuturesTradingEnv(gym.Env):
             elif desired < 0 and cross5 != -1:
                 desired = 0
 
-        # c) apply action
-        trade_contracts = int(action[0])
+        # c) apply action using the filtered `desired`
+        trade_contracts = desired
         cost            = trade_contracts * price * 100
         self.position  += trade_contracts
         self.balance   -= cost
@@ -126,13 +125,13 @@ class FuturesTradingEnv(gym.Env):
         # d) record open (flat→nonzero)
         if prev_pos == 0 and self.position != 0:
             self._open_trade = {
-                "asset":        self.asset,
-                "contracts":    self.position,
-                "entry_price":  price,
-                "entry_step":   self.current_step,
+                "asset":       self.asset,
+                "contracts":   self.position,
+                "entry_price": price,
+                "entry_step":  self.current_step,
             }
 
-        # e) advance time
+        # e) advance time & only end at final bar
         self.current_step += 1
         if self.current_step >= len(self.data) - 1:
             self.done = True
@@ -141,40 +140,26 @@ class FuturesTradingEnv(gym.Env):
         next_bar    = self.data.iloc[self.current_step]
         next_price  = next_bar["price"]
 
-        # check drawdown & profit-target before normal reward
+        # g) compute clipped reward (but DON'T end episode here)
         unrealized_pnl = self.position * (next_price - price) * 100
+        reward = np.clip(unrealized_pnl, -self.stop_loss, self.take_profit)
 
-        # stop-loss breach?
-        if unrealized_pnl <= -self.stop_loss:
-            self.done = True
-            reward = -self.take_profit   # big penalty
-            info = {"balance": self.balance, "position": self.position, "current_price": next_price}
-            return self._get_obs(), reward, self.done, info
-
-        # take-profit hit?
-        if unrealized_pnl >= self.take_profit:
-            self.done = True
-            reward = self.take_profit    # big bonus
-            info = {"balance": self.balance, "position": self.position, "current_price": next_price}
-            return self._get_obs(), reward, self.done, info
-
-        # g) normal step reward & info
-        reward = unrealized_pnl
-        obs    = self._get_obs()
-        info   = {
+        # h) base info & obs
+        obs = self._get_obs()
+        info = {
             "balance":       self.balance,
             "position":      self.position,
             "current_price": next_price,
         }
 
-        # h) record natural close (agent flattened position)
+        # i) record natural close (nonzero→flat)
         if prev_pos != 0 and self.position == 0 and self._open_trade is not None:
             tr = {
                 **self._open_trade,
                 "exit_price":  price,
                 "exit_step":   self.current_step,
                 "pl":          self._open_trade["contracts"] 
-                            * (price - self._open_trade["entry_price"]) * 100,
+                             * (price - self._open_trade["entry_price"]) * 100,
                 "timestamp":   next_bar["datetime"].isoformat(),
             }
             self.trades.append(tr)

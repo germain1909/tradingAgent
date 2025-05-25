@@ -114,7 +114,16 @@ def train_and_save_model():
         print ('kwargs added')
 
         # Initialize the PPO agent with your custom environment class and kwargs
-        agent = PPOTradingAgent(env_class=FuturesTradingEnv, env_kwargs=env_kwargs, verbose=1, n_steps=900, batch_size=10)
+        agent = PPOTradingAgent(
+            env_class=FuturesTradingEnv,
+            env_kwargs=env_kwargs,
+            verbose=1,
+            n_envs=1,        # single–env backtest
+            n_steps=900,     # collect 900 bars before each update
+            batch_size=10,   # mini-batch size of 10
+            learning_rate=3e-4,
+            gamma=0.99,
+        )
 
         # Instantiate with verbose=1 for real-time prints
         trade_cb = TradeLoggingJSONCallback(
