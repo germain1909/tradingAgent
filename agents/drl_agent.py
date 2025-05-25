@@ -14,6 +14,11 @@ class PPOTradingAgent:
         n_envs: int = 1,      # ← how many parallel copies of the env
         n_steps: int = 2048,  # ← rollout length per update
         batch_size: int = 64, # ← minibatch size for PPO
+        learning_rate=1e-4,
+        gamma=0.95,
+        gae_lambda=0.92,
+        clip_range=0.2,
+        ent_coef=0.005,
         **ppo_kwargs         # Extra PPO hyperparameters like learning_rate, n_steps etc.
     ):
         self.env_class = env_class
@@ -22,6 +27,11 @@ class PPOTradingAgent:
         self.n_envs = n_envs
         self.n_steps = n_steps
         self.batch_size = batch_size
+        self.learning_rate = learning_rate
+        self.gamma = gamma
+        self.gae_lambda = gae_lambda
+        self.clip_range = clip_range
+        self.ent_coef = ent_coef
         
         # Create a vectorized env with `n_envs` copies
         self.train_env = DummyVecEnv(

@@ -120,9 +120,12 @@ def train_and_save_model():
             verbose=1,
             n_envs=1,        # single–env backtest
             n_steps=900,     # collect 900 bars before each update
-            batch_size=10,   # mini-batch size of 10
-            learning_rate=3e-4,
-            gamma=0.99,
+            batch_size=64,   # mini-batch size of 10
+            learning_rate=1e-4,
+            gamma=0.95,
+            gae_lambda=0.92,
+            clip_range=0.2,
+            ent_coef=0.005,
         )
 
         # Instantiate with verbose=1 for real-time prints
