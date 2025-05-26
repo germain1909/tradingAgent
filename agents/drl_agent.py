@@ -19,6 +19,7 @@ class PPOTradingAgent:
         gae_lambda=0.92,
         clip_range=0.2,
         ent_coef=0.005,
+        seed: int = None,
         **ppo_kwargs         # Extra PPO hyperparameters like learning_rate, n_steps etc.
     ):
         self.env_class = env_class
@@ -32,18 +33,26 @@ class PPOTradingAgent:
         self.gae_lambda = gae_lambda
         self.clip_range = clip_range
         self.ent_coef = ent_coef
+        self.seed = seed
         
         # Create a vectorized env with `n_envs` copies
         self.train_env = DummyVecEnv(
             [lambda env_kwargs=self.env_kwargs: self.env_class(**env_kwargs)
             for _ in range(self.n_envs)
         ])
+
+        #Seed environment
+
+        if seed is not None:
+            self.train_env.seed(seed)
+
+        #Create or Load Model    
         if model_path:
             self.model = PPO.load(model_path, env=self.train_env)
             if self.verbose:
                 print(f"Loaded PPO model from {model_path}")
         else:
-            self.model = PPO(policy, env=self.train_env, verbose=verbose,n_steps=self.n_steps,batch_size=self.batch_size, **ppo_kwargs)
+            self.model = PPO(policy, env=self.train_env, verbose=verbose,n_steps=self.n_steps,batch_size=self.batch_size, seed=self.seed, **ppo_kwargs)
             if self.verbose:
                 print("Initialized new PPO model.")
 

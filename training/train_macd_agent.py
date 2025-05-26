@@ -1,10 +1,20 @@
 import os
 import json
 import pandas as pd
+import random
+import numpy as np
+import torch
 from envs.futures_trading_env import FuturesTradingEnv  # Your custom gym environment
 from agents.drl_agent import PPOTradingAgent  # Your PPO agent class
 from callbacks.trade_logging import TradeLoggingJSONCallback #Logging callback
 from util.indicators import compute_rsi
+import traceback
+
+# ─── Set Seed for Reproducibility ─────
+SEED = 42
+random.seed(SEED)
+np.random.seed(SEED)
+torch.manual_seed(SEED)
 
 
 def train_and_save_model():
@@ -126,6 +136,7 @@ def train_and_save_model():
             gae_lambda=0.92,
             clip_range=0.2,
             ent_coef=0.005,
+            seed=SEED
         )
 
         # Instantiate with verbose=1 for real-time prints
@@ -147,6 +158,7 @@ def train_and_save_model():
 
     except Exception as e:
         print(f"Error during training: {e}")
+        traceback.print_exc() 
 
 if __name__ == "__main__":
     train_and_save_model()

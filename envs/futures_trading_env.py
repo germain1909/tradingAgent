@@ -1,4 +1,5 @@
 # futures_trading_env.py
+import random
 import gym
 from gym import spaces
 import numpy as np
@@ -176,3 +177,13 @@ class FuturesTradingEnv(gym.Env):
         print(
             f"Step: {self.current_step}, Balance: {self.balance:.2f}, Position: {self.position}"
         )
+
+
+    def seed(self, seed=None):
+        """
+        Set the random seed for reproducibility.
+        """
+        self._seed = seed
+        random.seed(seed)
+        np.random.seed(seed)
+        return [seed]
