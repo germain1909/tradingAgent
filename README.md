@@ -82,10 +82,10 @@ docker run -p 5000:5000 my-trading-app
 
 
 ## Start the training
-python -m training.train_macd_agent.py
+python3 -m training.train_macd_agent
 
 ## Start the fetching of daily data 
-python3 scripts/fetch_daily_data.py
+python3 -m scripts.fetch_daily_data
 
 Need to add in your topstep token specify dates you want
 

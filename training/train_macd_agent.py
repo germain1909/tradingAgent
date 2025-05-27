@@ -1,5 +1,6 @@
 import os
 import json
+import glob
 import pandas as pd
 import random
 import numpy as np
@@ -22,16 +23,35 @@ def train_and_save_model():
         print("Starting training script...")
 
 
-        #A.Data Prep
-        # Load or prepare your futures data here (Pandas DataFrame)
-        #data = pd.read_csv('data/futures_data.csv')  # Replace with your actual data path
-        json_path = "sample_data/sample_1min_5_19.json"
 
-        with open(json_path, "r") as f:
-            raw = json.load(f)
-            # reverse bars because topstep returns data last first
-        bars = raw["bars"][::-1]
-        df = pd.DataFrame(bars).rename(columns={
+        #Load Single File In case we need it 
+        # json_path = "sample_data/sample_1min_5_19.json"
+
+        # with open(json_path, "r") as f:
+        #     raw = json.load(f)
+        #     # reverse bars because topstep returns data last first
+        # bars = raw["bars"][::-1]
+        # df = pd.DataFrame(bars).rename(columns={
+        #     "t": "datetime",  # original timestamp field
+        #     "o": "open",
+        #     "h": "high",
+        #     "l": "low",
+        #     "c": "price",
+        #     "v": "volume",
+        # })
+
+        # ─── A. Data Prep (multi-day JSON) ──────────────────────
+        all_bars = []
+        # adjust the path to where you dumped your daily files
+        for json_file in sorted(glob.glob("data/month_json/*.json")):
+                with open(json_file, "r") as f:
+                     raw = json.load(f)
+                # raw["bars"] is in reverse chronological order; reverse it
+                day_bars = raw["bars"][::-1]
+                all_bars.extend(day_bars)
+
+        # now build one big DataFrame
+        df = (pd.DataFrame(all_bars).rename(columns={
             "t": "datetime",  # original timestamp field
             "o": "open",
             "h": "high",
@@ -39,6 +59,9 @@ def train_and_save_model():
             "c": "price",
             "v": "volume",
         })
+        )
+        
+
         print("Columns after rename:", df.columns.tolist())
 
         # ─── Step 2: Parse & set index, then reset so datetime is a column ─────
@@ -112,8 +135,8 @@ def train_and_save_model():
         df["symbol"] = "GC2"
         print(f"DataFrame ready: {len(df)} rows, head:\n", df.head())
 
-        print(f"Loaded futures data with shape: {bars}")
-        print(f"Loaded {len(bars)} bars")
+        print(f"Loaded futures data with shape: {all_bars}")
+        print(f"Loaded {len(all_bars)} bars")
         print(df)
 
 
@@ -129,7 +152,7 @@ def train_and_save_model():
             env_kwargs=env_kwargs,
             verbose=1,
             n_envs=1,        # single–env backtest
-            n_steps=900,     # collect 900 bars before each update
+            n_steps=100000,     # collect 900 bars before each update
             batch_size=64,   # mini-batch size of 10
             learning_rate=1e-4,
             gamma=0.95,
@@ -146,7 +169,7 @@ def train_and_save_model():
         )
 
         # Train the agent
-        agent.train(total_timesteps=900,callback=trade_cb)
+        agent.train(total_timesteps=100000,callback=trade_cb)
         print("Training completed.")
 
         # Save the trained model
