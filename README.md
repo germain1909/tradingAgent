@@ -84,5 +84,8 @@ docker run -p 5000:5000 my-trading-app
 ## Start the training
 python -m training.train_macd_agent.py
 
+## Start the fetching of daily data 
+python3 scripts/fetch_daily_data.py
+
 
 ## Germain
