@@ -12,7 +12,7 @@ from util.indicators import compute_rsi
 import traceback
 
 # ─── Set Seed for Reproducibility ─────
-SEED = 111
+SEED = 1111
 random.seed(SEED)
 np.random.seed(SEED)
 torch.manual_seed(SEED)
@@ -143,7 +143,7 @@ def train_and_save_model():
         
         
         # D. Prepare environment kwargs, adjust depending on your env's __init__ signature
-        env_kwargs = {"data": df, "disable_early_termination": True}
+        env_kwargs = {"data": df}
         print ('kwargs added')
 
         # Initialize the PPO agent with your custom environment class and kwargs
