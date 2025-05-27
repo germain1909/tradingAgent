@@ -12,7 +12,7 @@ from util.indicators import compute_rsi
 import traceback
 
 # ─── Set Seed for Reproducibility ─────
-SEED = 42
+SEED = 111
 random.seed(SEED)
 np.random.seed(SEED)
 torch.manual_seed(SEED)
@@ -60,7 +60,7 @@ def train_and_save_model():
             "v": "volume",
         })
         )
-        
+        num_steps = len(df)
 
         print("Columns after rename:", df.columns.tolist())
 
@@ -143,7 +143,7 @@ def train_and_save_model():
         
         
         # D. Prepare environment kwargs, adjust depending on your env's __init__ signature
-        env_kwargs = {"data": df}
+        env_kwargs = {"data": df, "disable_early_termination": True}
         print ('kwargs added')
 
         # Initialize the PPO agent with your custom environment class and kwargs
@@ -152,7 +152,7 @@ def train_and_save_model():
             env_kwargs=env_kwargs,
             verbose=1,
             n_envs=1,        # single–env backtest
-            n_steps=100000,     # collect 900 bars before each update
+            n_steps=num_steps,     # collect 900 bars before each update
             batch_size=64,   # mini-batch size of 10
             learning_rate=1e-4,
             gamma=0.95,
@@ -169,7 +169,7 @@ def train_and_save_model():
         )
 
         # Train the agent
-        agent.train(total_timesteps=100000,callback=trade_cb)
+        agent.train(total_timesteps=num_steps,callback=trade_cb)
         print("Training completed.")
 
         # Save the trained model
