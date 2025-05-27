@@ -87,5 +87,6 @@ python -m training.train_macd_agent.py
 ## Start the fetching of daily data 
 python3 scripts/fetch_daily_data.py
 
+Need to add in your topstep token specify dates you want
 
 ## Germain
