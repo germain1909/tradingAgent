@@ -10,7 +10,9 @@ from agents.drl_agent import PPOTradingAgent  # Your PPO agent class
 from callbacks.trade_logging import TradeLoggingJSONCallback #Logging callback
 from util.indicators import compute_rsi
 import traceback
-
+import pickle
+from stable_baselines3.common.callbacks import EvalCallback
+from stable_baselines3.common.vec_env import DummyVecEnv
 # ─── Set Seed for Reproducibility ─────
 SEED = 1111
 random.seed(SEED)
@@ -151,15 +153,16 @@ def train_and_save_model():
             env_class=FuturesTradingEnv,
             env_kwargs=env_kwargs,
             verbose=1,
-            n_envs=1,        # single–env backtest
-            n_steps=num_steps,     # collect 900 bars before each update
+            n_envs=4,        # single–env backtest
+            n_steps=2048,     # collect 900 bars before each update
             batch_size=64,   # mini-batch size of 10
             learning_rate=1e-4,
             gamma=0.95,
             gae_lambda=0.92,
             clip_range=0.2,
             ent_coef=0.005,
-            seed=SEED
+            seed=SEED,
+            tensorboard_log="models/tb_logs",    # ← new: where SB3 will write event files
         )
 
         # Instantiate with verbose=1 for real-time prints
@@ -168,8 +171,19 @@ def train_and_save_model():
         verbose=1
         )
 
+        # Evaluation environemt and callback
+        eval_env = DummyVecEnv([lambda: FuturesTradingEnv(**env_kwargs)])
+        eval_cb  = EvalCallback(
+            eval_env,
+            best_model_save_path="models/best_model/",
+            log_path="models/eval_logs/",
+            eval_freq= num_steps,      # evaluate once per pass
+            n_eval_episodes=1,
+            deterministic=True,
+        )
+
         # Train the agent
-        agent.train(total_timesteps=num_steps,callback=trade_cb)
+        agent.train(total_timesteps=num_steps*20,callback=[trade_cb,eval_cb])
         print("Training completed.")
 
         # Save the trained model
@@ -178,6 +192,37 @@ def train_and_save_model():
         print("Model saved to models/ppo_macd_futures")
 
         print("Training complete and model saved!")
+
+                # ─── D. Clean one‐pass evaluation ─────────────────────────
+        print("\nStarting clean one-pass evaluation…")
+        eval_env = FuturesTradingEnv(**env_kwargs)
+        obs      = eval_env.reset()
+        done     = False
+
+        # start equity curve at initial cash
+        equity_curve = [eval_env.balance]
+
+        while not done:
+            action, _ = agent.model.predict(obs, deterministic=True)
+            obs, _, done, info = eval_env.step(action)
+            bal   = info["balance"]
+            pos   = info["position"]
+            price = info["current_price"]
+            equity_curve.append(bal + pos * price * 100)
+
+        # dump all closed trades & equity curve
+        with open("models/eval_trades.json", "w") as f:
+            json.dump(eval_env.trades, f, default=str, indent=2)
+
+        with open("models/equity_curve.pkl", "wb") as f:
+            pickle.dump(equity_curve, f)
+
+        final_pl = equity_curve[-1] - equity_curve[0]
+        print(f"\nFinal evaluation P/L = {final_pl:.2f}")
+        print(f"Saved {len(eval_env.trades)} trades → models/eval_trades.json")
+        print(f"Equity curve → models/equity_curve.pkl")
+
+
 
     except Exception as e:
         print(f"Error during training: {e}")

@@ -17,8 +17,8 @@ class FuturesTradingEnv(gym.Env):
         data: pd.DataFrame,
         initial_balance: float = 100_000,
         asset_name: str = "GC4",
-        stop_loss: float = 500.0,
-        take_profit: float = 1000.0,
+        # stop_loss: float = 500.0,
+        # take_profit: float = 1000.0,
     ):
         super(FuturesTradingEnv, self).__init__()
 
@@ -26,14 +26,10 @@ class FuturesTradingEnv(gym.Env):
         self.initial_balance = initial_balance
 
         # 2) risk-management params
-        self.stop_loss = stop_loss
-        self.take_profit = take_profit
+        # self.stop_loss = stop_loss
+        # self.take_profit = take_profit
 
-        # Define action and observation space
-        # Action space: Discrete number of contracts to buy (negative for sell)
-        self.action_space = spaces.Box(low=-10, high=10, shape=(1,), dtype=np.int32)
 
-        # ——————————————————————————————————————————————
         # Build your feature list (order must match exactly what you engineered)
         self.feature_cols = [
             "price",       # raw price
@@ -51,11 +47,35 @@ class FuturesTradingEnv(gym.Env):
             "macd_15m", "macd_signal_15m", "macd_hist_15m",
         ]
 
-        # Observation space: example - price and cash balance
+
+         # ←── HERE: declare per‐episode state (no values yet)
+        self.current_step = None
+        self.position     = None
+        self.balance      = None
+        self.trades       = None
+        self._open_trade  = None
+        self.done         = None
+
+          # ─── initialize them once so _get_obs() works in __init__ ─────────
+        initial_obs = self.reset()
+
+         # Define action and observation space
+        # Action space: Discrete number of contracts to buy (negative for sell)
+        self.action_space = spaces.Discrete(3)
+
+         # observation is whatever shape _get_obs() returned
+        self.observation_space = spaces.Box(
+        low=-np.inf,
+        high= np.inf,
+        shape=initial_obs.shape,
+        dtype=np.float32
+        )
+
+         # observation is whatever shape _get_obs() returned
         self.observation_space = spaces.Box(
         low=-np.inf,
         high=np.inf,
-        shape=(len(self.feature_cols),),
+        shape=initial_obs.shape,
         dtype=np.float32
         )
 
@@ -96,57 +116,58 @@ class FuturesTradingEnv(gym.Env):
 
         return np.array(obs, dtype=np.float32)
 
+
+
     def step(self, action):
-        # a) if already done
+        # a) if already done, keep returning terminal
         if self.done:
             return self._get_obs(), 0.0, True, {}
 
-        # b) snapshot
+        # b) pull current bar
         bar       = self.data.iloc[self.current_step]
         price     = bar["price"]
         prev_pos  = self.position
         cross5    = bar["macd_cross_5m"]
 
-        # desired from the agent
-        desired = int(action[0])
+        # c) normalize whatever action format into a Python int 0,1,2
+        arr = np.array(action)
+        raw = int(np.ravel(arr)[0])
 
-        # only allow new entries on a MACD cross
+        # map raw into desired change: 0→-1, 1→0, 2→+1
+        desired = {0: -1, 1: 0, 2: 1}[raw]
+
+        # d) only allow entries on a MACD cross
         if prev_pos == 0 and desired != 0:
-            if desired > 0 and cross5 != +1:
-                desired = 0
-            elif desired < 0 and cross5 != -1:
+            # bullish only on +1, bearish only on -1
+            if (desired > 0 and cross5 != +1) or (desired < 0 and cross5 != -1):
                 desired = 0
 
-        # c) apply action (use filtered desired) trade_contracts = desired
-        trade_contracts = desired
+        # e) execute the trade (delta contracts)
+        trade_contracts = desired - self.position
         cost            = trade_contracts * price * 100
         self.position  += trade_contracts
         self.balance   -= cost
 
-        # d) record open (flat→nonzero)
+        # f) record opening of a new position
         if prev_pos == 0 and self.position != 0:
             self._open_trade = {
                 "asset":       self.asset,
                 "contracts":   self.position,
                 "entry_price": price,
                 "entry_step":  self.current_step,
-                "macd_cross":   cross5,
+                "macd_cross":  cross5,
             }
 
-        # e) advance time & only end at final bar
+        # g) advance time
         self.current_step += 1
         if self.current_step >= len(self.data) - 1:
             self.done = True
 
-        # f) look ahead price for P/L
-        next_bar    = self.data.iloc[self.current_step]
-        next_price  = next_bar["price"]
+        # h) next‐bar price for obs/info
+        next_bar   = self.data.iloc[self.current_step]
+        next_price = next_bar["price"]
 
-        # g) compute clipped reward (but DON'T end episode here)
-        unrealized_pnl = self.position * (next_price - price) * 100
-        reward = np.clip(unrealized_pnl, -self.stop_loss, self.take_profit)
-
-        # h) base info & obs
+        # i) build obs & info
         obs = self._get_obs()
         info = {
             "balance":       self.balance,
@@ -154,22 +175,52 @@ class FuturesTradingEnv(gym.Env):
             "current_price": next_price,
         }
 
-        # i) record natural close (nonzero→flat)
+        # j) record a natural close
         if prev_pos != 0 and self.position == 0 and self._open_trade is not None:
             tr = {
                 **self._open_trade,
-                "exit_price":  price,
-                "exit_step":   self.current_step,
+                "exit_price":      price,
+                "exit_step":       self.current_step,
                 "macd_cross_exit": bar["macd_cross_5m"],
-                "pl":          self._open_trade["contracts"] 
-                             * (price - self._open_trade["entry_price"]) * 100,
-                "timestamp":   next_bar["datetime"].isoformat(),
+                "pl":               self._open_trade["contracts"]
+                                    * (price - self._open_trade["entry_price"]) * 100,
+                "timestamp":       next_bar["datetime"].isoformat(),
+            }
+            self.trades.append(tr)
+            self._open_trade = None
+            info["last_trade"] = tr
+        
+
+        # 4) if we’ve just hit the last bar and still have an open position,
+    #    flip it flat and record that trade too
+        if self.done and self._open_trade is not None:
+            tr = { 
+                **self._open_trade,
+                "exit_price":      price,
+                "exit_step":       self.current_step,
+                "pl":               self._open_trade["contracts"]
+                                    * (price - self._open_trade["entry_price"]) * 100,
+                "timestamp":       next_bar["datetime"].isoformat(),
             }
             self.trades.append(tr)
             self._open_trade = None
             info["last_trade"] = tr
 
+        # k) compute reward
+        if "last_trade" in info:
+            # agent just closed a trade: reward = realized P/L
+            reward = info["last_trade"]["pl"]*0.01
+        else:
+            # no close: penalty each step, small bonus for non-flat
+            reward = -1.0
+             # small bonus for acting on a signal
+            if raw != 1 and cross5 != 0:  # 1 is “flat”
+                reward += 0.005
+
         return obs, reward, self.done, info
+
+
+
 
 
 

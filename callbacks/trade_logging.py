@@ -10,6 +10,9 @@ class TradeLoggingJSONCallback(BaseCallback):
 
 
     def _on_step(self) -> bool:
+        if self.verbose and "rewards" in self.locals:
+            print("sample rewards:", self.locals["rewards"][:5])
+            
         for info in self.locals.get("infos", []):
             tr = info.get("last_trade")
             if tr is not None:

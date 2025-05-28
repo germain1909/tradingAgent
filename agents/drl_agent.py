@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
+from gym.wrappers.time_limit import TimeLimit
 
 class PPOTradingAgent:
     def __init__(
@@ -20,6 +21,7 @@ class PPOTradingAgent:
         clip_range=0.2,
         ent_coef=0.005,
         seed: int = None,
+        tensorboard_log: str = None,
         **ppo_kwargs         # Extra PPO hyperparameters like learning_rate, n_steps etc.
     ):
         self.env_class = env_class
@@ -34,12 +36,18 @@ class PPOTradingAgent:
         self.clip_range = clip_range
         self.ent_coef = ent_coef
         self.seed = seed
+
+        def make_raw_env():
+            env = self.env_class(**self.env_kwargs)
+            # If Gym/Shimmy wrapped it in a TimeLimit, strip it off:
+            if isinstance(env, TimeLimit):
+                env = env.env
+            return env
         
-        # Create a vectorized env with `n_envs` copies
-        self.train_env = DummyVecEnv(
-            [lambda env_kwargs=self.env_kwargs: self.env_class(**env_kwargs)
-            for _ in range(self.n_envs)
-        ])
+       
+        # ─── VECTORIZE ──────────────────────────────────────────────────────────
+        self.train_env = DummyVecEnv([make_raw_env for _ in range(self.n_envs)])
+
 
         #Seed environment
 
@@ -52,7 +60,21 @@ class PPOTradingAgent:
             if self.verbose:
                 print(f"Loaded PPO model from {model_path}")
         else:
-            self.model = PPO(policy, env=self.train_env, verbose=verbose,n_steps=self.n_steps,batch_size=self.batch_size, seed=self.seed, **ppo_kwargs)
+            self.model = PPO(
+                policy,
+                env=self.train_env,
+                verbose=self.verbose,
+                n_steps=self.n_steps,
+                batch_size=self.batch_size,
+                learning_rate=self.learning_rate,
+                gamma=self.gamma,
+                gae_lambda=self.gae_lambda,
+                clip_range=self.clip_range,
+                ent_coef=self.ent_coef,
+                seed=self.seed,
+                tensorboard_log=tensorboard_log,  # ← new
+                **ppo_kwargs
+            )
             if self.verbose:
                 print("Initialized new PPO model.")
 
