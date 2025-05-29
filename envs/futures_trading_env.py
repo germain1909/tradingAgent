@@ -36,15 +36,19 @@ class FuturesTradingEnv(gym.Env):
             "balance",     # cash on hand
 
             # 1-minute indicators
-            "ema_50", "ema_200", "vwap", "rsi_1m",
+            "ema_50", "ema_200", "vwap", "rsi_1m","true_range_1m",
+            "atr_14_1m","bb_mid_1m","bb_std_1m","bb_upper_1m",
+            "bb_lower_1m",
 
             # 5-minute indicators
             "ema_7_5m", "ema_17_5m", "ema_33_5m",
             "macd_5m", "macd_signal_5m", "macd_hist_5m",
-            "rsi_5m", "rsi_ma_5m",
+            "rsi_5m", "rsi_ma_5m","true_range_5m",
+            "atr_14_5m","bb_mid_5m","bb_std_5m","bb_upper_5m",
+            "bb_lower_5m","macd_cross_5m",
 
             # 15-minute indicators
-            "macd_15m", "macd_signal_15m", "macd_hist_15m",
+            "macd_15m", "macd_signal_15m", "macd_hist_15m","macd_cross_15m",
         ]
 
 
@@ -119,43 +123,49 @@ class FuturesTradingEnv(gym.Env):
 
 
     def step(self, action):
-        # a) if already done, keep returning terminal
+        # a) terminal
         if self.done:
             return self._get_obs(), 0.0, True, {}
 
-        # b) pull current bar
-        bar       = self.data.iloc[self.current_step]
-        price     = bar["price"]
-        prev_pos  = self.position
-        cross5    = bar["macd_cross_5m"]
+        # b) current bar
+        bar      = self.data.iloc[self.current_step]
+        price    = bar["price"]
+        prev_pos = self.position
+        cross15  = bar["macd_cross_15m"]
+        atr15    = bar["atr_14_15m"]  # your ATR
 
-        # c) normalize whatever action format into a Python int 0,1,2
+        # c) normalize action
         arr = np.array(action)
         raw = int(np.ravel(arr)[0])
-
-        # map raw into desired change: 0→-1, 1→0, 2→+1
         desired = {0: -1, 1: 0, 2: 1}[raw]
 
-        # d) only allow entries on a MACD cross
+        # d) only allow new entries on a MACD cross + ATR filter
         if prev_pos == 0 and desired != 0:
-            # bullish only on +1, bearish only on -1
-            if (desired > 0 and cross5 != +1) or (desired < 0 and cross5 != -1):
+            # wrong‐side cross => cancel
+            if (desired > 0 and cross15 != +1) or (desired < 0 and cross15 != -1):
                 desired = 0
 
-        # e) execute the trade (delta contracts)
+        # ↓ NEW: auto‐exit on the *opposite* 15m‐MACD cross
+        if prev_pos > 0 and cross15 == -1:
+            desired = 0
+        elif prev_pos < 0 and cross15 == +1:
+            desired = 0
+
+        # e) execute trade (delta contracts)
         trade_contracts = desired - self.position
         cost            = trade_contracts * price * 100
         self.position  += trade_contracts
         self.balance   -= cost
 
-        # f) record opening of a new position
+        # f) record opening
         if prev_pos == 0 and self.position != 0:
             self._open_trade = {
                 "asset":       self.asset,
                 "contracts":   self.position,
                 "entry_price": price,
                 "entry_step":  self.current_step,
-                "macd_cross":  cross5,
+                "macd_cross":  cross15,
+                "atr_on_entry":atr15,
             }
 
         # g) advance time
@@ -163,25 +173,25 @@ class FuturesTradingEnv(gym.Env):
         if self.current_step >= len(self.data) - 1:
             self.done = True
 
-        # h) next‐bar price for obs/info
         next_bar   = self.data.iloc[self.current_step]
         next_price = next_bar["price"]
 
-        # i) build obs & info
+        # h) build obs/info
         obs = self._get_obs()
         info = {
             "balance":       self.balance,
             "position":      self.position,
             "current_price": next_price,
+            "atr_14_15m":    atr15,
         }
 
-        # j) record a natural close
+        # i) natural close on opposite cross
         if prev_pos != 0 and self.position == 0 and self._open_trade is not None:
             tr = {
                 **self._open_trade,
                 "exit_price":      price,
                 "exit_step":       self.current_step,
-                "macd_cross_exit": bar["macd_cross_5m"],
+                "macd_cross_exit": cross15,
                 "pl":               self._open_trade["contracts"]
                                     * (price - self._open_trade["entry_price"]) * 100,
                 "timestamp":       next_bar["datetime"].isoformat(),
@@ -189,35 +199,40 @@ class FuturesTradingEnv(gym.Env):
             self.trades.append(tr)
             self._open_trade = None
             info["last_trade"] = tr
-        
 
-        # 4) if we’ve just hit the last bar and still have an open position,
-    #    flip it flat and record that trade too
+        # j) forced close at end of data
         if self.done and self._open_trade is not None:
-            tr = { 
+            tr = {
                 **self._open_trade,
-                "exit_price":      price,
-                "exit_step":       self.current_step,
-                "pl":               self._open_trade["contracts"]
-                                    * (price - self._open_trade["entry_price"]) * 100,
-                "timestamp":       next_bar["datetime"].isoformat(),
+                "exit_price":  price,
+                "exit_step":   self.current_step,
+                "pl":          self._open_trade["contracts"]
+                            * (price - self._open_trade["entry_price"]) * 100,
+                "timestamp":   next_bar["datetime"].isoformat(),
             }
             self.trades.append(tr)
             self._open_trade = None
             info["last_trade"] = tr
 
-        # k) compute reward
+        # k) reward (tiered P/L bonuses & penalties)
         if "last_trade" in info:
-            # agent just closed a trade: reward = realized P/L
-            reward = info["last_trade"]["pl"]*0.01
+            pl = info["last_trade"]["pl"]
+            reward = 1.0 if pl > 0 else -1.0
+            if pl >= 1500:
+                reward += 1.5
+            elif pl >= 1000:
+                reward += 1.0
+            elif pl >= 500:
+                reward += 0.5
+            if pl <= -500:
+                reward -= 1.0
+            elif pl <= -300:
+                reward -= 0.5
         else:
-            # no close: penalty each step, small bonus for non-flat
-            reward = -1.0
-             # small bonus for acting on a signal
-            if raw != 1 and cross5 != 0:  # 1 is “flat”
-                reward += 0.005
+            reward = -0.5  # idle penalty
 
         return obs, reward, self.done, info
+
 
 
 

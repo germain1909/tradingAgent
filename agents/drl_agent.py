@@ -14,12 +14,12 @@ class PPOTradingAgent:
         verbose=1,
         n_envs: int = 1,      # ← how many parallel copies of the env
         n_steps: int = 2048,  # ← rollout length per update
-        batch_size: int = 64, # ← minibatch size for PPO
-        learning_rate=1e-4,
+        batch_size: int = 32, # ← minibatch size for PPO
+        learning_rate=3e-5,
         gamma=0.95,
         gae_lambda=0.92,
         clip_range=0.2,
-        ent_coef=0.005,
+        ent_coef=1e-3,
         seed: int = None,
         tensorboard_log: str = None,
         **ppo_kwargs         # Extra PPO hyperparameters like learning_rate, n_steps etc.

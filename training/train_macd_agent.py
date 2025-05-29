@@ -80,6 +80,14 @@ def train_and_save_model():
         df["vwap"]    = (typ * df["volume"]).cumsum() / df["volume"].cumsum()
         df["rsi_1m"]  = compute_rsi(df["price"], length=14)
 
+        # 1-min ATR & BB
+        df["true_range_1m"]    = (df["high"] - df["low"]).clip(lower=0)
+        df["atr_14_1m"]     = df["true_range_1m"].rolling(14).mean()
+        df["bb_mid_1m"]     = df["price"].rolling(20).mean()
+        df["bb_std_1m"]     = df["price"].rolling(20).std()
+        df["bb_upper_1m"]   = df["bb_mid_1m"] + 2 * df["bb_std_1m"]
+        df["bb_lower_1m"]   = df["bb_mid_1m"] - 2 * df["bb_std_1m"]
+
         # 2) 5-min bars + indicators
         df5 = df[["open","high","low","price","volume"]].resample("5T").agg({
             "open":"first","high":"max","low":"min","price":"last","volume":"sum"
@@ -104,6 +112,14 @@ def train_and_save_model():
         df5["rsi_5m"]    = compute_rsi(df5["price"], length=10)
         df5["rsi_ma_5m"] = df5["rsi_5m"].rolling(3).mean()
 
+        # On your 5-min resampled df5:
+        df5["true_range_5m"]   = (df5["high"] - df5["low"]).clip(lower=0)
+        df5["atr_14_5m"]    = df5["true_range_5m"].rolling(14).mean()
+        df5["bb_mid_5m"]    = df5["price"].rolling(20).mean()
+        df5["bb_std_5m"]    = df5["price"].rolling(20).std()
+        df5["bb_upper_5m"]  = df5["bb_mid_5m"] + 2 * df5["bb_std_5m"]
+        df5["bb_lower_5m"]  = df5["bb_mid_5m"] - 2 * df5["bb_std_5m"]
+
         # 3) 15-min bars + MACD
         df15 = df[["open","high","low","price","volume"]].resample("15T").agg({
             "open":"first","high":"max","low":"min","price":"last","volume":"sum"
@@ -115,13 +131,31 @@ def train_and_save_model():
         df15["macd_15m"]        = macd_15
         df15["macd_signal_15m"] = sig_15
         df15["macd_hist_15m"]   = macd_15 - sig_15
+        df15["macd_cross_15m"] = 0
+        df15["true_range_15m"]   = (df15["high"] - df15["low"]).clip(lower=0)
+        df15["atr_14_15m"]    = df15["true_range_15m"].rolling(14).mean()
+        # bullish cross: MACD went from ≤ signal → > signal
+        df15.loc[
+            (macd_15.shift(1) <= sig_15.shift(1)) &
+            (macd_15 > sig_15),
+            "macd_cross_15m"
+        ] = +1
+        # bearish cross: MACD went from ≥ signal → < signal
+        df15.loc[
+            (macd_15.shift(1) >= sig_15.shift(1)) &
+            (macd_15 < sig_15),
+            "macd_cross_15m"
+        ] = -1
+
+
 
         # 4) merge back & reset index → datetime column returns
         five_min_feats = [
              "ema_7_5m","ema_17_5m","ema_33_5m",
              "macd_5m","macd_signal_5m","macd_hist_5m",
              "rsi_5m","rsi_ma_5m",
-             "macd_cross_5m"           # ← add it here
+             "macd_cross_5m","true_range_5m","atr_14_5m","bb_mid_5m",
+             "bb_std_5m","bb_upper_5m","bb_lower_5m"           # ← add it here
         ]
         for col in five_min_feats: df[col] = df5[col].reindex(df.index, method="ffill")
         for col in df15.columns:  df[col]  = df15[col].reindex(df.index, method="ffill")
@@ -155,8 +189,8 @@ def train_and_save_model():
             verbose=1,
             n_envs=4,        # single–env backtest
             n_steps=2048,     # collect 900 bars before each update
-            batch_size=64,   # mini-batch size of 10
-            learning_rate=1e-4,
+            batch_size=32,   # mini-batch size of 10
+            learning_rate=3e-5,
             gamma=0.95,
             gae_lambda=0.92,
             clip_range=0.2,
@@ -195,25 +229,44 @@ def train_and_save_model():
 
                 # ─── D. Clean one‐pass evaluation ─────────────────────────
         print("\nStarting clean one-pass evaluation…")
-        eval_env = FuturesTradingEnv(**env_kwargs)
-        obs      = eval_env.reset()
-        done     = False
+        print("\nStarting clean one-pass evaluation…")
+        eval_env    = FuturesTradingEnv(**env_kwargs)
+        obs         = eval_env.reset()
+        done        = False
+
+        # for counting and printing signals
+        signal_count = 0  
 
         # start equity curve at initial cash
         equity_curve = [eval_env.balance]
 
         while not done:
+            # look at the bar we’re about to act on
+            step_idx = eval_env.current_step
+            bar      = eval_env.data.iloc[step_idx]
+            # pick whichever cross you’re using:
+            cross5   = bar["macd_cross_5m"]
+            # or, if you moved to 15m:
+            # cross15 = bar["macd_cross_15m"]
+
+            if cross5 != 0:
+                signal_count += 1
+                print(f"  → MACD 5m cross {cross5:+d} at {bar['datetime']} (step {step_idx})")
+
             action, _ = agent.model.predict(obs, deterministic=True)
             obs, _, done, info = eval_env.step(action)
+
             bal   = info["balance"]
             pos   = info["position"]
             price = info["current_price"]
             equity_curve.append(bal + pos * price * 100)
 
+        # after the loop:
+        print(f"\nTotal MACD-5m crosses seen during eval: {signal_count}")
+
         # dump all closed trades & equity curve
         with open("models/eval_trades.json", "w") as f:
             json.dump(eval_env.trades, f, default=str, indent=2)
-
         with open("models/equity_curve.pkl", "wb") as f:
             pickle.dump(equity_curve, f)
 
@@ -221,6 +274,9 @@ def train_and_save_model():
         print(f"\nFinal evaluation P/L = {final_pl:.2f}")
         print(f"Saved {len(eval_env.trades)} trades → models/eval_trades.json")
         print(f"Equity curve → models/equity_curve.pkl")
+
+        
+
 
 
 

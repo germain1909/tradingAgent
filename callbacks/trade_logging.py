@@ -10,9 +10,9 @@ class TradeLoggingJSONCallback(BaseCallback):
 
 
     def _on_step(self) -> bool:
-        if self.verbose and "rewards" in self.locals:
-            print("sample rewards:", self.locals["rewards"][:5])
-            
+        # if self.verbose and "rewards" in self.locals:
+        #     print("sample rewards:", self.locals["rewards"][:5])
+
         for info in self.locals.get("infos", []):
             tr = info.get("last_trade")
             if tr is not None:
@@ -22,7 +22,7 @@ class TradeLoggingJSONCallback(BaseCallback):
                 self.aggregate_pl += tr["pl"]
 
                 # 3) decode the macd cross flag
-                mc = tr.get("macd_cross_5m", 0)
+                mc = tr.get("macd_cross_15m", 0)
                 if mc ==  1: cross_str = "bullish"
                 elif mc == -1: cross_str = "bearish"
                 else:         cross_str = "none"
