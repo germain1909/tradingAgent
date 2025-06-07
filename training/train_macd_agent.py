@@ -13,47 +13,60 @@ import traceback
 import pickle
 from stable_baselines3.common.callbacks import EvalCallback
 from stable_baselines3.common.vec_env import DummyVecEnv
+from sklearn.linear_model import LinearRegression
+from datetime import datetime
+
 # ─── Set Seed for Reproducibility ─────
 SEED = 1111
 random.seed(SEED)
 np.random.seed(SEED)
 torch.manual_seed(SEED)
 
+# 2. Define slope calculation function using linear regression
+def linear_slope(series):
+    if series.isnull().any():
+        return np.nan
+    y = series.values
+    x = np.arange(len(y)).reshape(-1, 1)
+    model = LinearRegression().fit(x, y)
+    return model.coef_[0]
+
+def save_dataframes(dataframes: dict, filetype="xlsx", folder="logs"):
+    """
+    Save multiple DataFrames to disk with timestamped filenames.
+
+    Args:
+        dataframes (dict): Dictionary where keys are names and values are DataFrames.
+        filetype (str): "csv" or "xlsx".
+        folder (str): Destination folder.
+    """
+    os.makedirs(folder, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+    for name, df in dataframes.items():
+        filename = f"{folder}/{name}_{timestamp}.{filetype}"
+
+        if filetype == "csv":
+            df.to_csv(filename, index=False)
+        elif filetype == "xlsx":
+            df.to_excel(filename, index=False)
+        else:
+            raise ValueError("Unsupported filetype. Use 'csv' or 'xlsx'.")
+
+        print(f"Saved: {filename}")
+
 
 def train_and_save_model():
     try:
         print("Starting training script...")
-
-
-
         #Load Single File In case we need it 
-        # json_path = "sample_data/sample_1min_5_19.json"
+        json_path = "sample_data/sample_1min_5_19.json"
 
-        # with open(json_path, "r") as f:
-        #     raw = json.load(f)
-        #     # reverse bars because topstep returns data last first
-        # bars = raw["bars"][::-1]
-        # df = pd.DataFrame(bars).rename(columns={
-        #     "t": "datetime",  # original timestamp field
-        #     "o": "open",
-        #     "h": "high",
-        #     "l": "low",
-        #     "c": "price",
-        #     "v": "volume",
-        # })
-
-        # ─── A. Data Prep (multi-day JSON) ──────────────────────
-        all_bars = []
-        # adjust the path to where you dumped your daily files
-        for json_file in sorted(glob.glob("data/month_json/*.json")):
-                with open(json_file, "r") as f:
-                     raw = json.load(f)
-                # raw["bars"] is in reverse chronological order; reverse it
-                day_bars = raw["bars"][::-1]
-                all_bars.extend(day_bars)
-
-        # now build one big DataFrame
-        df = (pd.DataFrame(all_bars).rename(columns={
+        with open(json_path, "r") as f:
+            raw = json.load(f)
+            # reverse bars because topstep returns data last first
+        bars = raw["bars"][::-1]
+        df = pd.DataFrame(bars).rename(columns={
             "t": "datetime",  # original timestamp field
             "o": "open",
             "h": "high",
@@ -61,7 +74,29 @@ def train_and_save_model():
             "c": "price",
             "v": "volume",
         })
-        )
+
+        df_price = df.copy()
+
+        # # ─── A. Data Prep (multi-day JSON) ──────────────────────
+        # all_bars = []
+        # # adjust the path to where you dumped your daily files
+        # for json_file in sorted(glob.glob("data/month_json/*.json")):
+        #         with open(json_file, "r") as f:
+        #              raw = json.load(f)
+        #         # raw["bars"] is in reverse chronological order; reverse it
+        #         day_bars = raw["bars"][::-1]
+        #         all_bars.extend(day_bars)
+
+        # # now build one big DataFrame
+        # df = (pd.DataFrame(all_bars).rename(columns={
+        #     "t": "datetime",  # original timestamp field
+        #     "o": "open",
+        #     "h": "high",
+        #     "l": "low",
+        #     "c": "price",
+        #     "v": "volume",
+        # })
+        # )
         num_steps = len(df)
 
         print("Columns after rename:", df.columns.tolist())
@@ -75,32 +110,27 @@ def train_and_save_model():
         #B. Indicators
         # 1) 1-min indicators
         df["ema_50"]  = df["price"].ewm(span=50,  adjust=False).mean()
-        df["ema_200"] = df["price"].ewm(span=200, adjust=False).mean()
+        df["ema_50_slope"] = df["ema_50"].rolling(window=5).apply(linear_slope, raw=False)
+        # df["ema_200"] = df["price"].ewm(span=200, adjust=False).mean()
         typ = (df["high"] + df["low"] + df["price"])/3
         df["vwap"]    = (typ * df["volume"]).cumsum() / df["volume"].cumsum()
-        df["rsi_1m"]  = compute_rsi(df["price"], length=14)
 
-        # 1-min ATR & BB
+        # 1-min ATR 
         df["true_range_1m"]    = (df["high"] - df["low"]).clip(lower=0)
         df["atr_14_1m"]     = df["true_range_1m"].rolling(14).mean()
-        df["bb_mid_1m"]     = df["price"].rolling(20).mean()
-        df["bb_std_1m"]     = df["price"].rolling(20).std()
-        df["bb_upper_1m"]   = df["bb_mid_1m"] + 2 * df["bb_std_1m"]
-        df["bb_lower_1m"]   = df["bb_mid_1m"] - 2 * df["bb_std_1m"]
-
+        
         # 2) 5-min bars + indicators
         df5 = df[["open","high","low","price","volume"]].resample("5T").agg({
             "open":"first","high":"max","low":"min","price":"last","volume":"sum"
         })
-        for span in (7,17,33):
-            df5[f"ema_{span}_5m"] = df5["price"].ewm(span=span, adjust=False).mean()
+        # for span in (7,17,33):
+        #  df5[f"ema_{span}_5m"] = df5["price"].ewm(span=span, adjust=False).mean()
         ema12_5 = df5["price"].ewm(span=12, adjust=False).mean()
         ema26_5 = df5["price"].ewm(span=26, adjust=False).mean()
         macd_5  = ema12_5 - ema26_5
         sig_5   = macd_5.ewm(span=9, adjust=False).mean()
         df5["macd_5m"]        = macd_5
         df5["macd_signal_5m"] = sig_5
-        df5["macd_hist_5m"]   = macd_5 - sig_5
 
         # 2) Flag the cross of MACD line over/under its signal line
         df5["macd_cross_5m"] = 0
@@ -130,10 +160,8 @@ def train_and_save_model():
         sig_15   = macd_15.ewm(span=9, adjust=False).mean()
         df15["macd_15m"]        = macd_15
         df15["macd_signal_15m"] = sig_15
-        df15["macd_hist_15m"]   = macd_15 - sig_15
         df15["macd_cross_15m"] = 0
-        df15["true_range_15m"]   = (df15["high"] - df15["low"]).clip(lower=0)
-        df15["atr_14_15m"]    = df15["true_range_15m"].rolling(14).mean()
+        df15["macd_slope_15m"] = df15["macd_15m"].diff()
         # bullish cross: MACD went from ≤ signal → > signal
         df15.loc[
             (macd_15.shift(1) <= sig_15.shift(1)) &
@@ -151,35 +179,68 @@ def train_and_save_model():
 
         # 4) merge back & reset index → datetime column returns
         five_min_feats = [
-             "ema_7_5m","ema_17_5m","ema_33_5m",
-             "macd_5m","macd_signal_5m","macd_hist_5m",
+             "macd_5m","macd_signal_5m",
              "rsi_5m","rsi_ma_5m",
              "macd_cross_5m","true_range_5m","atr_14_5m","bb_mid_5m",
              "bb_std_5m","bb_upper_5m","bb_lower_5m"           # ← add it here
         ]
+
+        fifteen_min_feats = [
+            "macd_15m", "macd_signal_15m", "macd_cross_15m","macd_slope_15m",  # example features
+         # add more 15m feature columns here as needed
+        ]
+
+
+        # Forward-fill only selected 5-minute features
         for col in five_min_feats: df[col] = df5[col].reindex(df.index, method="ffill")
-        for col in df15.columns:  df[col]  = df15[col].reindex(df.index, method="ffill")
+        # Forward-fill only selected 15-minute features
+        for col in fifteen_min_feats: df[col] = df15[col].reindex(df.index).ffill()
         df.dropna(inplace=True)
         df.reset_index(inplace=True)
 
-        # C. Reset Index and ADD SYMBOL
-        # bring datetime back as a column for the env
-        df.reset_index(inplace=True)
-        print("Columns after reset_index:", df.columns.tolist())
+
+        # Step 1: Define columns to skip
+        exclude_cols = ["index","datetime", "balance", "position","macd_cross_5m"]
 
         # Add Symbol
         df["symbol"] = "GC2"
         print(f"DataFrame ready: {len(df)} rows, head:\n", df.head())
 
-        print(f"Loaded futures data with shape: {all_bars}")
-        print(f"Loaded {len(all_bars)} bars")
-        print(df)
+        #Begin Normalization
+        # Step 2: Identify numeric columns not in the exclusion list
+        cols_to_normalize = [
+            col for col in df.select_dtypes(include=["number"]).columns
+            if col not in exclude_cols
+        ]
+
+        # Step 3: Normalize only selected columns
+        df_norm = df.copy()
+        for col in cols_to_normalize:
+            mean = df[col].mean()
+            std = df[col].std()
+            if std == 0:
+                df_norm[col] = 0  # or np.nan if you want to flag it
+            else:
+                df_norm[col] = (df[col] - mean) / std
+
+        # print(f"Loaded futures data with shape: {all_bars}")
+        # print(f"Loaded {len(all_bars)} bars")
+        pd.set_option('display.width', None)           # Don't wrap columns
+        pd.set_option('display.max_colwidth', None)    # Show full column content
+        print(f"Loaded futures data with shape: {bars}")
+        print(f"Loaded {len(bars)} bars")
+        print(df_norm.tail(5))
 
 
-        
+        #Save dataframes to csv
+        save_dataframes({
+            "df": df,
+            "df_norm": df_norm,
+            "df_price": df_price
+        }, filetype="csv")
         
         # D. Prepare environment kwargs, adjust depending on your env's __init__ signature
-        env_kwargs = {"data": df}
+        env_kwargs = {"data": df, "normalized_data": df_norm}
         print ('kwargs added')
 
         # Initialize the PPO agent with your custom environment class and kwargs
@@ -286,3 +347,5 @@ def train_and_save_model():
 
 if __name__ == "__main__":
     train_and_save_model()
+
+
