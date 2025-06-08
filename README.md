@@ -112,5 +112,26 @@ Anywhere inside your environment class (like __init__, _get_obs, step, etc.), yo
 self.data.iloc[...]  # for raw prices, timestamps, etc.<br>
 self.normalized_data.iloc[...]  # for features the model should learn from<br>
 
+iloc stands for integer location so allows you to locate a row in the dataframe based on integer location<br>
+
+## Notes on the how step is called
+in a reinforcement learning (RL) training loop using libraries like Stable-Baselines3 (SB3) or Gym, the action comes directly from the RL agent. <br>
+this code below in the predict function 
+<br>
+while not done: <br>
+  action, _states = self.model.predict(obs, deterministic=deterministic)<br>
+            obs, reward, done, info = env.step(action)<br>
+            actions.append(action)<br>
+            rewards.append(reward)<br>
+            dones.append(done)<br>
+
+So that line   obs, reward, done, info = env.step(action)<br>
+Is what calls step every time and returns those value 
+
+
+
+
+
+
 
 ## Germain
