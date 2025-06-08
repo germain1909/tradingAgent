@@ -24,7 +24,7 @@ class FuturesTradingEnv(gym.Env):
         super(FuturesTradingEnv, self).__init__()
 
         self.data = data.reset_index(drop=True)
-        self.normalized_data = data.reset_index(drop=True)
+        self.normalized_data = normalized_data.reset_index(drop=True)
         self.initial_balance = initial_balance
 
         # 2) risk-management params
@@ -36,7 +36,8 @@ class FuturesTradingEnv(gym.Env):
         self.feature_cols = [
            
             # 1-minute indicators
-            "ema_50","vwap","true_range_1m",
+            "open","high","low","price","volume","ema_50",
+            "ema_50_slope","vwap","true_range_1m",
             "atr_14_1m",
 
             # 5-minute indicators
@@ -47,6 +48,7 @@ class FuturesTradingEnv(gym.Env):
 
             # 15-minute indicators
             "macd_15m", "macd_signal_15m","macd_cross_15m",
+            "macd_slope_15m",
         ]
 
 
@@ -114,12 +116,16 @@ class FuturesTradingEnv(gym.Env):
         obs = [row["price"], self.balance]
 
         # append each engineered feature in order
-        for feat in self.feature_cols[2:]:
+        for feat in self.feature_cols:
             obs.append(row_normalized[feat])
 
         # DEBUG: print the observation
         obs_array = np.array(obs, dtype=np.float32)
-        print(f"[Step {self.current_step}] Observation: {obs_array}")
+        np.set_printoptions(suppress=True, precision=10)
+        feature_names = ["price", "balance"] + self.feature_cols
+        obs_named = [f"{name}: {val:.5f}" for name, val in zip(feature_names, obs_array)]
+        print(f"[Step {self.current_step}] Observation:\n" + ", ".join(obs_named))
+        # print(f"[Step {self.current_step}] Normalized Row:\n{row_normalized}")
 
         return np.array(obs, dtype=np.float32)
 
