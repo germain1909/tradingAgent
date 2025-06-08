@@ -92,40 +92,25 @@ Need to add in your topstep token specify dates you want
 
 ## Notes regarding environment creation and using data frame in environment
 1. You define your environment like this:
-python
-Copy
-Edit
-class FuturesTradingEnv(gym.Env):
-    def __init__(self, data, normalized_data, initial_balance=100_000, asset_name="GC4"):
-        self.data = data
-        self.normalized_data = normalized_data
+
+class FuturesTradingEnv(gym.Env): <br>
+    def __init__(self, data, normalized_data, initial_balance=100_000, asset_name="GC4"):<br>
+        self.data = data<br>
+        self.normalized_data = normalized_data<br>
         ...
-2. When you call:
-python
-Copy
-Edit
-env = self.env_class(**self.env_kwargs)
-Python does this under the hood:
+2. When you call:<br>
+env = self.env_class(**self.env_kwargs)<br>
+Python does this under the hood:<br>
 
-python
-Copy
-Edit
-env = FuturesTradingEnv(data=df, normalized_data=df_norm)
-So inside your environment, you can directly use:
+env = FuturesTradingEnv(data=df, normalized_data=df_norm)<br>
+So inside your environment, you can directly use:<br>
 
-python
-Copy
-Edit
-self.data  # gives you the full unnormalized DataFrame
-self.normalized_data  # gives you the normalized version
-✅ How You Can Access df in the Env
-Anywhere inside your environment class (like __init__, _get_obs, step, etc.), you can access:
-
-python
-Copy
-Edit
-self.data.iloc[...]  # for raw prices, timestamps, etc.
-self.normalized_data.iloc[...]  # for features the model should learn from
+self.data  # gives you the full unnormalized DataFrame<br>
+self.normalized_data  # gives you the normalized version<br>
+✅ How You Can Access df in the Env<br>
+Anywhere inside your environment class (like __init__, _get_obs, step, etc.), you can access:<br>
+self.data.iloc[...]  # for raw prices, timestamps, etc.<br>
+self.normalized_data.iloc[...]  # for features the model should learn from<br>
 
 
 ## Germain
