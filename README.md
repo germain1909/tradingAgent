@@ -89,4 +89,43 @@ python3 -m scripts.fetch_daily_data
 
 Need to add in your topstep token specify dates you want
 
+
+## Notes regarding environment creation and using data frame in environment
+1. You define your environment like this:
+python
+Copy
+Edit
+class FuturesTradingEnv(gym.Env):
+    def __init__(self, data, normalized_data, initial_balance=100_000, asset_name="GC4"):
+        self.data = data
+        self.normalized_data = normalized_data
+        ...
+2. When you call:
+python
+Copy
+Edit
+env = self.env_class(**self.env_kwargs)
+Python does this under the hood:
+
+python
+Copy
+Edit
+env = FuturesTradingEnv(data=df, normalized_data=df_norm)
+So inside your environment, you can directly use:
+
+python
+Copy
+Edit
+self.data  # gives you the full unnormalized DataFrame
+self.normalized_data  # gives you the normalized version
+✅ How You Can Access df in the Env
+Anywhere inside your environment class (like __init__, _get_obs, step, etc.), you can access:
+
+python
+Copy
+Edit
+self.data.iloc[...]  # for raw prices, timestamps, etc.
+self.normalized_data.iloc[...]  # for features the model should learn from
+
+
 ## Germain
