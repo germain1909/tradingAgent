@@ -18,6 +18,7 @@ class FuturesTradingEnv(gym.Env):
         normalized_data: pd.DataFrame,
         initial_balance: float = 100_000,
         asset_name: str = "GC4",
+        unrealized_pnl = 0,
         # stop_loss: float = 500.0,
         # take_profit: float = 1000.0,
     ):
@@ -26,6 +27,7 @@ class FuturesTradingEnv(gym.Env):
         self.data = data.reset_index(drop=True)
         self.normalized_data = normalized_data.reset_index(drop=True)
         self.initial_balance = initial_balance
+        self.unrealized_pnl = unrealized_pnl
 
         # 2) risk-management params
         # self.stop_loss = stop_loss
@@ -75,14 +77,6 @@ class FuturesTradingEnv(gym.Env):
         dtype=np.float32
         )
 
-         # observation is whatever shape _get_obs() returned
-        self.observation_space = spaces.Box(
-        low=-np.inf,
-        high=np.inf,
-        shape=initial_obs.shape,
-        dtype=np.float32
-        )
-
         self.current_step = 0
         self.balance = self.initial_balance
         self.position = 0  # number of contracts held
@@ -113,7 +107,7 @@ class FuturesTradingEnv(gym.Env):
         row_normalized = self.normalized_data.iloc[self.current_step]
 
         # start with price & cash balance
-        obs = [row["price"], self.balance]
+        obs = [row["price"], self.balance, self.unrealized_pnl]
 
         # append each engineered feature in order
         for feat in self.feature_cols:
@@ -122,7 +116,7 @@ class FuturesTradingEnv(gym.Env):
         # DEBUG: print the observation
         obs_array = np.array(obs, dtype=np.float32)
         np.set_printoptions(suppress=True, precision=10)
-        feature_names = ["price", "balance"] + self.feature_cols
+        feature_names = ["price", "balance","unrealized_pnl"] + self.feature_cols
         obs_named = [f"{name}: {val:.5f}" for name, val in zip(feature_names, obs_array)]
         print(f"[Step {self.current_step}] Observation:\n" + ", ".join(obs_named))
         # print(f"[Step {self.current_step}] Normalized Row:\n{row_normalized}")
