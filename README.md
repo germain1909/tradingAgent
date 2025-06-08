@@ -130,13 +130,13 @@ Is what calls step every time and returns those value
 
 
 ## Starting point for training and Notes about the first observation 
-So the predict function is very important in the agent file 
-The predict function is the starting point
-Predict calls
-obs = env.reset()
-which returns 
-return self._get_obs()
-Which creates the first observation and then we call step on that obs and off to the races
+So the predict function is very important in the agent file <br>
+The predict function is the starting point<br>
+Predict calls<br>
+obs = env.reset()<br>
+which returns <br>
+return self._get_obs()<br>
+Which creates the first observation and then we call step on that obs and off to the races<br>
 
 
 
