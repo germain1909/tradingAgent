@@ -129,9 +129,16 @@ So that line   obs, reward, done, info = env.step(action)<br>
 Is what calls step every time and returns those value 
 
 
+## Starting point for training and Notes about the first observation 
+So the predict function is very important in the agent file 
+The predict function is the starting point
+Predict calls
+obs = env.reset()
+which returns 
+return self._get_obs()
+Which creates the first observation and then we call step on that obs and off to the races
 
 
 
 
-
-## Germain
+## Germain V3
