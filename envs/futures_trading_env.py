@@ -34,9 +34,7 @@ class FuturesTradingEnv(gym.Env):
 
         # Build your feature list (order must match exactly what you engineered)
         self.feature_cols = [
-            "price",       # raw price
-            "balance",     # cash on hand
-
+           
             # 1-minute indicators
             "ema_50","vwap","true_range_1m",
             "atr_14_1m",
@@ -116,12 +114,11 @@ class FuturesTradingEnv(gym.Env):
         obs = [row["price"], self.balance]
 
         # append each engineered feature in order
-        # for feat in self.feature_cols[2:]:
-        #     obs.append(row[feat])
+        for feat in self.feature_cols[2:]:
+            obs.append(row_normalized[feat])
 
+        # DEBUG: print the observation
         obs_array = np.array(obs, dtype=np.float32)
-
-         # DEBUG: print the observation
         print(f"[Step {self.current_step}] Observation: {obs_array}")
 
         return np.array(obs, dtype=np.float32)
