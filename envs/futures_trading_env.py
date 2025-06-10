@@ -19,8 +19,9 @@ class FuturesTradingEnv(gym.Env):
         initial_balance: float = 100_000,
         asset_name: str = "GC4",
         unrealized_pnl = 0,
-        # stop_loss: float = 500.0,
-        # take_profit: float = 1000.0,
+        stop_loss: float = 500.0,
+        take_profit: float = 1000.0,
+        contract_size = 100,
     ):
         super(FuturesTradingEnv, self).__init__()
 
@@ -28,10 +29,11 @@ class FuturesTradingEnv(gym.Env):
         self.normalized_data = normalized_data.reset_index(drop=True)
         self.initial_balance = initial_balance
         self.unrealized_pnl = unrealized_pnl
+        self.contract_size = contract_size
 
         # 2) risk-management params
-        # self.stop_loss = stop_loss
-        # self.take_profit = take_profit
+        self.stop_loss = stop_loss
+        self.take_profit = take_profit
 
 
         # Build your feature list (order must match exactly what you engineered)
@@ -107,7 +109,7 @@ class FuturesTradingEnv(gym.Env):
         row_normalized = self.normalized_data.iloc[self.current_step]
 
         # start with price & cash balance
-        obs = [row["price"], self.balance, self.unrealized_pnl]
+        obs = [row["price"], self.balance, self.unrealized_pnl,self.position]
 
         # append each engineered feature in order
         for feat in self.feature_cols:
@@ -116,9 +118,9 @@ class FuturesTradingEnv(gym.Env):
         # DEBUG: print the observation
         obs_array = np.array(obs, dtype=np.float32)
         np.set_printoptions(suppress=True, precision=10)
-        feature_names = ["price", "balance","unrealized_pnl"] + self.feature_cols
+        feature_names = ["price", "balance","unrealized_pnl","position"] + self.feature_cols
         obs_named = [f"{name}: {val:.5f}" for name, val in zip(feature_names, obs_array)]
-        print(f"[Step {self.current_step}] Observation:\n" + ", ".join(obs_named))
+        # print(f"[Step {self.current_step}] Observation:\n" + ", ".join(obs_named))
         # print(f"[Step {self.current_step}] Normalized Row:\n{row_normalized}")
 
         return np.array(obs, dtype=np.float32)
@@ -131,42 +133,110 @@ class FuturesTradingEnv(gym.Env):
 
         # --- Current bar data
         bar      = self.data.iloc[self.current_step]
+        normalized_bar = self.normalized_data.iloc[self.current_step]
         price    = bar["price"]
         prev_pos = self.position
         cross15  = bar["macd_cross_15m"]
+        info = {}
+     # Map the action directly
+        action_map = {
+            0: "hold",
+            1: "open_long",
+            2: "close_long",
+            # 3: "open_short",
+            # 4: "close_short"
+        }
+        action_name = action_map[action]
 
-        # --- Action normalization
-        arr = np.array(action)
-        raw = int(np.ravel(arr)[0])
-        desired = {0: -1, 1: 0, 2: 1}[raw]
+        if self._open_trade is not None:
+            entry_price = self._open_trade["entry_price"]
+            position = self.position
+            self.unrealized_pnl =(price - entry_price) * position * self.contract_size
+        else:
+            self.unrealized_pnl = 0
 
-        # --- Entry filter
-        if prev_pos == 0 and desired != 0:
-            if (desired > 0 and cross15 != +1) or (desired < 0 and cross15 != -1):
-                desired = 0
+        #OPEN TRADES
 
-        # --- MACD exit
-        if prev_pos > 0 and cross15 == -1:
-            desired = 0
-        elif prev_pos < 0 and cross15 == +1:
-            desired = 0
+        # Prevents position flipping
+        if action_name == "open_long":
+            if self.position == 0:
+                self.position = 1
+                self._open_trade = {
+                    "entry_price": price,
+                    "entry_step": self.current_step,
+                    "side": "long"
+                }
+       
+        if action_name == "close_long":
+            if self.position == 1:
+                info["last_trade"] = self._close_trade(price, "AI")
+                self.position = 0
+                self._open_trade = None
+            else:
+                print(f"[Step {self.current_step}] ⚠️ Ignored invalid action: close_long with no long position")
+                unavailable_reward = -20
+                obs = self._get_obs()
+                self.current_step += 1  # advance time to avoid infinite loop
+                return obs, unavailable_reward, self.done, info  # 🛑 return early without progressing
 
-        # --- Execute trade
-        trade_contracts = desired - self.position
-        cost            = trade_contracts * price * 100
-        self.position  += trade_contracts
-        self.balance   -= cost
 
-        if prev_pos == 0 and self.position != 0:
-            self._open_trade = {
-                "asset":       self.asset,
-                "contracts":   self.position,
-                "entry_price": price,
-                "entry_step":  self.current_step,
-                "macd_cross":  cross15,
-            }
+        # if action_name == "open_short":
+        #     if self.position == 0:
+        #         self.position = -1
+        #         self._open_trade = {
+        #             "entry_price": price,
+        #             "entry_step": self.current_step,
+        #             "side": "short"
+        #         }
+        # if action_name == "close_short":
+        #     if self.position == -1:
+        #         info["last_trade"] = self._close_trade(price,"AI")
+        #         self.position = 0
+        #         self._open_trade = None
+        #     else:
+        #         print(f"[Step {self.current_step}] ⚠️ Ignored invalid action: close_short with no short position")
+        #         obs = self._get_obs()
+        #         unavailable_reward = -20
+        #         self.current_step += 1  # advance time to avoid infinite loop
+        #         return obs, unavailable_reward, self.done, info  # 🛑 return early without progressing
 
-        # --- Advance time
+        
+        print(f"[Step {self.current_step}] Action: {action_name} | Position: {self.position} | PnL: {self.unrealized_pnl:.2f} | Balance: {self.balance:.2f}")
+
+
+        # CLOSE TRADES 
+
+        if self._open_trade is not None:
+            side         = self._open_trade["side"]
+            if side == "long":
+                if self.unrealized_pnl <= -self.stop_loss:
+                    info["last_trade"] = self._close_trade(price,"stop loss")
+                    self.position = 0
+                    self._open_trade = None
+                    print(f"Stop loss hit on LONG at step {self.current_step}")
+                
+                elif self.unrealized_pnl >= self.take_profit:
+                    info["last_trade"] = self._close_trade(price,"take profit")
+                    self.position = 0
+                    self._open_trade = None
+                    print(f"Take profit hit on LONG at step {self.current_step}")
+
+            # elif side == "short":
+
+            #     if self.unrealized_pnl <= -self.stop_loss:
+            #         info["last_trade"] = self._close_trade(price,"stop loss")
+            #         self.position = 0
+            #         self._open_trade = None
+            #         print(f"Stop loss hit on SHORT at step {self.current_step}")
+                
+            #     elif self.unrealized_pnl >= self.take_profit:
+            #         info["last_trade"] = self._close_trade(price,"take profit")
+            #         self.position = 0
+            #         self._open_trade = None
+            #         print(f"Take profit hit on SHORT at step {self.current_step}")
+
+
+         # --- Advance time
         self.current_step += 1
         if self.current_step >= len(self.data) - 1:
             self.done = True
@@ -176,84 +246,42 @@ class FuturesTradingEnv(gym.Env):
 
         # --- Observation
         obs = self._get_obs()
-        info = {
-            "balance":       self.balance,
-            "position":      self.position,
-            "current_price": next_price,
-        }
-
-        # --- Stop-loss logic
-        was_stopped_out = False
-        if self._open_trade is not None and self.current_step > self._open_trade["entry_step"]:
-            entry_price   = self._open_trade["entry_price"]
-            contracts     = self._open_trade["contracts"]
-            direction     = np.sign(contracts)
-            price_diff    = (next_price - entry_price) * direction
-            unrealized_pl = abs(contracts) * price_diff * 100
-
-            if unrealized_pl <= -1000:
-                self.balance += -contracts * next_price * 100
-                self.position = 0
-                was_stopped_out = True
-
-                tr = {
-                    **self._open_trade,
-                    "exit_price":      next_price,
-                    "exit_step":       self.current_step,
-                    "macd_cross_exit": "stop",
-                    "pl":              unrealized_pl,
-                    "timestamp":       next_bar["datetime"].isoformat(),
-                }
-                self.trades.append(tr)
-                self._open_trade = None
-                info["last_trade"] = tr
-
-        # --- Natural exit (skip if stopped)
-        if not was_stopped_out and prev_pos != 0 and self.position == 0 and self._open_trade is not None:
-            tr = {
-                **self._open_trade,
-                "exit_price":      price,
-                "exit_step":       self.current_step,
-                "macd_cross_exit": cross15,
-                "pl":               self._open_trade["contracts"]
-                                    * (price - self._open_trade["entry_price"]) * 100,
-                "timestamp":       next_bar["datetime"].isoformat(),
-            }
-            self.trades.append(tr)
-            self._open_trade = None
-            info["last_trade"] = tr
-
-        # --- Final forced exit
-        if self.done and self._open_trade is not None:
-            tr = {
-                **self._open_trade,
-                "exit_price":  price,
-                "exit_step":   self.current_step,
-                "pl":          self._open_trade["contracts"]
-                            * (price - self._open_trade["entry_price"]) * 100,
-                "timestamp":   next_bar["datetime"].isoformat(),
-            }
-            self.trades.append(tr)
-            self._open_trade = None
-            info["last_trade"] = tr
-
+        info["balance"] = self.balance
+        info["position"] = self.position
+        info["current_price"] = next_price 
         # --- Reward
+        # Default reward
+        reward = -1.0  # mild penalty for doing nothing (hold)
+
+        # Penalty for invalid action
+        if action_name == "close_long" and self.position != 1:
+            reward = -10.0  # trying to close with no open long
+            return self._get_obs(), reward, self.done, info
+
+        # If a trade was closed, calculate profit/loss
         if "last_trade" in info:
             pl = info["last_trade"]["pl"]
-            reward = 1.0 if pl > 0 else -1.0
-            if pl >= 1500:
-                reward += 1.5
-            elif pl >= 1000:
-                reward += 1.0
-            elif pl >= 500:
-                reward += 0.5
-            if pl <= -500:
-                reward -= 1.0
-            elif pl <= -300:
-                reward -= 0.5
-        else:
-            reward = -0.5  # idle penalty
 
+            # Scale profit/loss for strong signal
+            reward = pl / 100.0
+
+            # Bonus for hitting big profits
+            if pl >= 1000:
+                reward += 10.0
+            elif pl >= 500:
+                reward += 5.0
+            elif pl > 0:
+                reward += 1.0
+
+            # Penalty for losses
+            if pl <= -1000:
+                reward -= 10.0
+            elif pl < 0:
+                reward -= 5.0
+
+        # Optional: small penalty every step with open position (to discourage holding too long)
+        elif self.position == 1:
+            reward = -0.1
         return obs, reward, self.done, info
 
 
@@ -277,3 +305,36 @@ class FuturesTradingEnv(gym.Env):
         random.seed(seed)
         np.random.seed(seed)
         return [seed]
+
+    def _close_trade(self, price: float, closeType: str):
+        #"""Close the current open trade and log the result."""
+        if not self._open_trade:
+            return
+
+        entry_price = self._open_trade["entry_price"]
+        position = self.position
+        pl = (price - entry_price) * position * self.contract_size
+
+        self.unrealized_pnl = pl
+        self.balance += pl
+
+        closed_trade = {
+            "asset": self.asset,
+            "clos_type": closeType,
+            "contracts": abs(position),
+            "side": self._open_trade["side"],
+            "entry_price": entry_price,
+            "exit_price": price,
+            "pl": pl,
+            "entry_step": self._open_trade["entry_step"],
+            "exit_step": self.current_step,
+            "timestamp": self.data.iloc[self.current_step]["datetime"],
+            "macd_cross_15m": self.data.iloc[self._open_trade["entry_step"]]["macd_cross_15m"],
+            "macd_cross_exit": self.data.iloc[self.current_step]["macd_cross_15m"]
+        }
+
+        self.trades.append(closed_trade)
+        self._open_trade = None
+        self.position = 0
+        self.unrealized_pnl = 0
+        return closed_trade
