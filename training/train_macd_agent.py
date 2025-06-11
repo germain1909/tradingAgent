@@ -5,16 +5,13 @@ import pandas as pd
 import random
 import numpy as np
 import torch
-from envs.futures_trading_env import FuturesTradingEnv  # Your custom gym environment
-from agents.drl_agent import PPOTradingAgent  # Your PPO agent class
-from callbacks.trade_logging import TradeLoggingJSONCallback #Logging callback
 from util.indicators import compute_rsi
 import traceback
 import pickle
-from stable_baselines3.common.callbacks import EvalCallback
-from stable_baselines3.common.vec_env import DummyVecEnv
 from sklearn.linear_model import LinearRegression
 from datetime import datetime
+from scipy.stats import linregress
+
 
 # ─── Set Seed for Reproducibility ─────
 SEED = 1111
@@ -55,40 +52,28 @@ def save_dataframes(dataframes: dict, filetype="xlsx", folder="logs"):
 
         print(f"Saved: {filename}")
 
+        
+# Function to calculate angle of the EMA slope in degrees
+def ema_slope_angle(series):
+    x = np.arange(len(series))
+    y = series.values
+    slope, _, _, _, _ = linregress(x, y)     # Get linear regression slope
+    angle_rad = np.arctan(slope)            # Convert slope to angle (radians)
+    angle_deg = np.degrees(angle_rad)       # Convert to degrees
+    return angle_deg
+
 
 def train_and_save_model():
     try:
-        print("Starting training script...")
-        #Load Single File In case we need it 
-        json_path = "sample_data/sample_1min_5_19.json"
+        print("Starting backtesting script...")
+        # Load Single File In case we need it 
+        # json_path = "sample_data/sample_1min_5_19.json"
 
-        with open(json_path, "r") as f:
-            raw = json.load(f)
-            # reverse bars because topstep returns data last first
-        bars = raw["bars"][::-1]
-        df = pd.DataFrame(bars).rename(columns={
-            "t": "datetime",  # original timestamp field
-            "o": "open",
-            "h": "high",
-            "l": "low",
-            "c": "price",
-            "v": "volume",
-        })
-
-        df_price = df.copy()
-
-        # # ─── A. Data Prep (multi-day JSON) ──────────────────────
-        # all_bars = []
-        # # adjust the path to where you dumped your daily files
-        # for json_file in sorted(glob.glob("data/month_json/*.json")):
-        #         with open(json_file, "r") as f:
-        #              raw = json.load(f)
-        #         # raw["bars"] is in reverse chronological order; reverse it
-        #         day_bars = raw["bars"][::-1]
-        #         all_bars.extend(day_bars)
-
-        # # now build one big DataFrame
-        # df = (pd.DataFrame(all_bars).rename(columns={
+        # with open(json_path, "r") as f:
+        #     raw = json.load(f)
+        #     # reverse bars because topstep returns data last first
+        # bars = raw["bars"][::-1]
+        # df = pd.DataFrame(bars).rename(columns={
         #     "t": "datetime",  # original timestamp field
         #     "o": "open",
         #     "h": "high",
@@ -96,8 +81,40 @@ def train_and_save_model():
         #     "c": "price",
         #     "v": "volume",
         # })
-        # )
+
+        
+
+        # ─── A. Data Prep (multi-day JSON) ──────────────────────
+        all_bars = []
+        # adjust the path to where you dumped your daily files
+        for json_file in sorted(glob.glob("data/month_json/*.json")):
+                with open(json_file, "r") as f:
+                     raw = json.load(f)
+                # raw["bars"] is in reverse chronological order; reverse it
+                bars = raw["bars"][::-1]
+                all_bars.extend(bars)
+
+        # now build one big DataFrame
+        df = (pd.DataFrame(all_bars).rename(columns={
+            "t": "datetime",  # original timestamp field
+            "o": "open",
+            "h": "high",
+            "l": "low",
+            "c": "price",
+            "v": "volume",
+        })
+        )
+        df.index = pd.to_datetime(df.index)  # ensure datetime dtype
+        df.index = df.index.tz_localize('UTC')  # localize naive timestamps to UTC
+        # Now convert to US/Eastern time
+        df.index = df.index.tz_convert('US/Eastern')
+
+
+
+
+
         num_steps = len(df)
+        df_price = df.copy()
 
         print("Columns after rename:", df.columns.tolist())
 
@@ -133,11 +150,13 @@ def train_and_save_model():
         df5["macd_signal_5m"] = sig_5
 
         # 2) Flag the cross of MACD line over/under its signal line
-        df5["macd_cross_5m"] = 0
+        df5["macd_cross_bullish_5m"] = 0
+        df5["macd_cross_bearish_5m"] = 0
+
         # bullish cross: MACD went from ≤signal → >signal
-        df5.loc[(macd_5.shift(1) <= sig_5.shift(1)) & (macd_5 > sig_5),"macd_cross_5m"] = +1
+        df5.loc[(macd_5.shift(1) <= sig_5.shift(1)) & (macd_5 > sig_5),"macd_cross_bullish_5m"] = 1
         # bearish cross: MACD went from ≥signal → <signal
-        df5.loc[(macd_5.shift(1) >= sig_5.shift(1)) & (macd_5 < sig_5),"macd_cross_5m"] = -1
+        df5.loc[(macd_5.shift(1) >= sig_5.shift(1)) & (macd_5 < sig_5),"macd_cross_bearish_5m"] = 1
 
         df5["rsi_5m"]    = compute_rsi(df5["price"], length=10)
         df5["rsi_ma_5m"] = df5["rsi_5m"].rolling(3).mean()
@@ -149,6 +168,13 @@ def train_and_save_model():
         df5["bb_std_5m"]    = df5["price"].rolling(20).std()
         df5["bb_upper_5m"]  = df5["bb_mid_5m"] + 2 * df5["bb_std_5m"]
         df5["bb_lower_5m"]  = df5["bb_mid_5m"] - 2 * df5["bb_std_5m"]
+        df5["ema_7_5m"]  = df5["price"].ewm(span=7, adjust=False).mean()
+        df5["ema_17_5m"] = df5["price"].ewm(span=17, adjust=False).mean()
+        df5["ema_33_5m"] = df5["price"].ewm(span=33, adjust=False).mean()
+        df5["ema_7_slope_5m"] = df5["ema_7_5m"].rolling(window=5).apply(linear_slope, raw=False)
+        df5["ema_7_angle_5m"] = df5["ema_7_5m"].rolling(window=5).apply(ema_slope_angle, raw=False)
+
+
 
         # 3) 15-min bars + MACD
         df15 = df[["open","high","low","price","volume"]].resample("15T").agg({
@@ -180,9 +206,9 @@ def train_and_save_model():
         # 4) merge back & reset index → datetime column returns
         five_min_feats = [
              "macd_5m","macd_signal_5m",
-             "rsi_5m","rsi_ma_5m",
-             "macd_cross_5m","true_range_5m","atr_14_5m","bb_mid_5m",
-             "bb_std_5m","bb_upper_5m","bb_lower_5m"           # ← add it here
+             "rsi_5m","rsi_ma_5m","macd_cross_bullish_5m","macd_cross_bearish_5m"
+             ,"true_range_5m","atr_14_5m","bb_mid_5m",
+             "bb_std_5m","bb_upper_5m","bb_lower_5m","ema_7_5m","ema_17_5m","ema_33_5m","ema_7_angle_5m",           # ← add it here
         ]
 
         fifteen_min_feats = [
@@ -206,137 +232,74 @@ def train_and_save_model():
         df["symbol"] = "GC2"
         print(f"DataFrame ready: {len(df)} rows, head:\n", df.head())
 
-        #Begin Normalization
-        # Step 2: Identify numeric columns not in the exclusion list
-        cols_to_normalize = [
-            col for col in df.select_dtypes(include=["number"]).columns
-            if col not in exclude_cols
-        ]
-
-        # Step 3: Normalize only selected columns
-        df_norm = df.copy()
-        for col in cols_to_normalize:
-            mean = df[col].mean()
-            std = df[col].std()
-            if std == 0:
-                df_norm[col] = 0  # or np.nan if you want to flag it
-            else:
-                df_norm[col] = (df[col] - mean) / std
-
         # print(f"Loaded futures data with shape: {all_bars}")
         # print(f"Loaded {len(all_bars)} bars")
         pd.set_option('display.width', None)           # Don't wrap columns
         pd.set_option('display.max_colwidth', None)    # Show full column content
         print(f"Loaded futures data with shape: {bars}")
         print(f"Loaded {len(bars)} bars")
-        print(df_norm.tail(5))
 
 
         #Save dataframes to csv
         save_dataframes({
             "df": df,
-            "df_norm": df_norm,
             "df_price": df_price
         }, filetype="csv")
-        
-        # D. Prepare environment kwargs, adjust depending on your env's __init__ signature
-        env_kwargs = {"data": df, "normalized_data": df_norm}
-        print ('kwargs added')
-
-        # Initialize the PPO agent with your custom environment class and kwargs
-        agent = PPOTradingAgent(
-            env_class=FuturesTradingEnv,
-            env_kwargs=env_kwargs,
-            verbose=1,
-            n_envs=4,        # single–env backtest
-            n_steps=2048,     # collect 900 bars before each update
-            batch_size=32,   # mini-batch size of 10
-            learning_rate=3e-5,
-            gamma=0.95,
-            gae_lambda=0.92,
-            clip_range=0.2,
-            ent_coef=0.005,
-            seed=SEED,
-            tensorboard_log="models/tb_logs",    # ← new: where SB3 will write event files
-        )
-
-        # Instantiate with verbose=1 for real-time prints
-        trade_cb = TradeLoggingJSONCallback(
-        log_path="models/trades.json",
-        verbose=1
-        )
-
-        # Evaluation environemt and callback
-        eval_env = DummyVecEnv([lambda: FuturesTradingEnv(**env_kwargs)])
-        eval_cb  = EvalCallback(
-            eval_env,
-            best_model_save_path="models/best_model/",
-            log_path="models/eval_logs/",
-            eval_freq= num_steps,      # evaluate once per pass
-            n_eval_episodes=1,
-            deterministic=True,
-        )
-
-        # Train the agent
-        agent.train(total_timesteps=num_steps*20,callback=[trade_cb,eval_cb])
-        print("Training completed.")
-
-        # Save the trained model
-        os.makedirs("models", exist_ok=True)
-        agent.save("models/ppo_macd_futures")
-        print("Model saved to models/ppo_macd_futures")
-
-        print("Training complete and model saved!")
-
+    
                 # ─── D. Clean one‐pass evaluation ─────────────────────────
         print("\nStarting clean one-pass evaluation…")
         print("\nStarting clean one-pass evaluation…")
-        eval_env    = FuturesTradingEnv(**env_kwargs)
-        obs         = eval_env.reset()
-        done        = False
-
         # for counting and printing signals
         signal_count = 0  
-
-        # start equity curve at initial cash
-        equity_curve = [eval_env.balance]
-
+        #add equity curve
+        done  = False
+        step_idx = 0
+        trades = []
+        trade = {}
+        unrealized_pnl = 0
+        balance  = 0
         while not done:
+            #if at the end of data set
             # look at the bar we’re about to act on
-            step_idx = eval_env.current_step
-            bar      = eval_env.data.iloc[step_idx]
+            bar      = df.iloc[step_idx]
             # pick whichever cross you’re using:
-            cross5   = bar["macd_cross_5m"]
+            print("macd_cross_bullish_5m:",bar["macd_cross_bullish_5m"],"macd_cross_bearish_5m",bar["macd_cross_bearish_5m"],"ema_50_slope:",bar["ema_50_slope"],"ema_7_5m:",bar["ema_7_5m"],"ema_17_5m:",bar["ema_17_5m"],"ema_33_5m:",bar["ema_33_5m"],
+                  "ema_7_angle_5m",bar["ema_7_angle_5m"]
+                  )
+            angle = bar["ema_7_angle_5m"]
+            price = bar["price"]
             # or, if you moved to 15m:
             # cross15 = bar["macd_cross_15m"]
+            # Check angle threshold
+            if not trade:
+                if angle >= 20:
+                        # Enter trade
+                        entry_price = price
+                        trade = {
+                            "entry_time": df.iloc[step_idx],
+                            "entry_price": entry_price,
+                        }
+                        print(f"Entered trade at {entry_price}")
+                        trades.append(trade)
+            else:
+                unrealized_pnl = (price - trade["entry_price"]) *100
+                if unrealized_pnl >= 1500 or unrealized_pnl <= -500:
+                    trade["exit_time"] = df.index[step_idx]
+                    trade["exit_price"] = price
+                    trade["trade_pnl"] = unrealized_pnl
+                    balance += unrealized_pnl
+                    trade["balance"] = balance
+                    trade = {}
+                    trades.append(trade)
+                    unrealized_pnl = 0
 
-            if cross5 != 0:
-                signal_count += 1
-                print(f"  → MACD 5m cross {cross5:+d} at {bar['datetime']} (step {step_idx})")
 
-            action, _ = agent.model.predict(obs, deterministic=True)
-            obs, _, done, info = eval_env.step(action)
-
-            bal   = info["balance"]
-            pos   = info["position"]
-            price = info["current_price"]
-            equity_curve.append(bal + pos * price * 100)
-
-        # after the loop:
-        print(f"\nTotal MACD-5m crosses seen during eval: {signal_count}")
-
-        # dump all closed trades & equity curve
-        with open("models/eval_trades.json", "w") as f:
-            json.dump(eval_env.trades, f, default=str, indent=2)
-        with open("models/equity_curve.pkl", "wb") as f:
-            pickle.dump(equity_curve, f)
-
-        final_pl = equity_curve[-1] - equity_curve[0]
-        print(f"\nFinal evaluation P/L = {final_pl:.2f}")
-        print(f"Saved {len(eval_env.trades)} trades → models/eval_trades.json")
-        print(f"Equity curve → models/equity_curve.pkl")
-
-        
+            step_idx += 1
+            if step_idx >= len(df):
+                with open("trades_log.json", "w") as f:
+                    json.dump(trades, f, indent=4, default=str)  # default=str handles datetime objects
+                done = True
+            
 
 
 
