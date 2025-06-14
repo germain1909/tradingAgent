@@ -69,6 +69,13 @@ def is_in_cooldown(current_time, last_trade_time):
     return last_trade_time is not None and (current_time - last_trade_time) < 15
 
 
+def is_long_allowed(price, ema_9_60m, ema_9_angle_60m):
+    return price > ema_9_60m and ema_9_angle_60m > 15
+
+def is_short_allowed(price, ema_9_60m, ema_9_angle_60m):
+    return price < ema_9_60m and ema_9_angle_60m < -15
+
+
 
 def train_and_save_model():
     try:
@@ -208,6 +215,24 @@ def train_and_save_model():
         ] = -1
 
 
+        #60 min
+        # 1) Resample to 60-minute bars
+        df60 = df[["open", "high", "low", "price", "volume"]].resample("60T").agg({
+            "open": "first",
+            "high": "max",
+            "low": "min",
+            "price": "last",
+            "volume": "sum"
+        })
+
+        # 2) Calculate 60-minute EMA(9)
+        df60["ema_9_60m"] = df60["price"].ewm(span=9, adjust=False).mean()
+        # 4) Apply slope and angle calculations
+        df60["ema_9_slope_60m"] = df60["ema_9_60m"].rolling(window=5).apply(linear_slope, raw=False)
+        df60["ema_9_angle_60m"] = df60["ema_9_60m"].rolling(window=5).apply(ema_slope_angle, raw=False)
+
+
+
 
         # 4) merge back & reset index → datetime column returns
         five_min_feats = [
@@ -222,11 +247,17 @@ def train_and_save_model():
          # add more 15m feature columns here as needed
         ]
 
+        sixty_min_feats = [
+            "ema_9_60m", "ema_9_slope_60m", "ema_9_angle_60m",  # example features
+         # add more 15m feature columns here as needed
+        ]
+
 
         # Forward-fill only selected 5-minute features
         for col in five_min_feats: df[col] = df5[col].reindex(df.index, method="ffill")
         # Forward-fill only selected 15-minute features
         for col in fifteen_min_feats: df[col] = df15[col].reindex(df.index).ffill()
+        for col in sixty_min_feats: df[col] = df60[col].reindex(df.index).ffill()
         df.dropna(inplace=True)
         df.reset_index(inplace=True)
 
@@ -265,7 +296,7 @@ def train_and_save_model():
         unrealized_pnl = 0
         balance  = 0
         last_trade_time = None
-        break_even_trigger = 280  # Unrealized PnL where you move SL to breakeven
+        break_even_trigger = 700  # Unrealized PnL where you move SL to breakeven
 
         while not done:
             #if at the end of data set
@@ -281,6 +312,9 @@ def train_and_save_model():
             ema_33 = bar["ema_33_5m"]
             current_time = df.index[step_idx]
             min_volatility = df["atr_14_1m"].rolling(100).median()
+            ema_9_60m = bar["ema_9_60m"]
+            ema_9_angle_60m = bar["ema_9_angle_60m"]
+            
 
             #Bullish Rececent crosses & conditions
             recent_crosses = df["macd_cross_bullish_5m"].iloc[step_idx - 10:step_idx + 1]
@@ -310,10 +344,15 @@ def train_and_save_model():
                     print(f"Moved SL to breakeven at {trade['stop_loss_price']}")
                 # Check if stop-loss or target hit
                 exit_price = None
-                if price <= trade["stop_loss_price"]:
-                    exit_price = trade["stop_loss_price"]
-                    print(f"Stopped out at {exit_price}")
-                elif unrealized_pnl >= 1500 or unrealized_pnl <= -400:
+                if trade["trade_direction"] == "buy":
+                    if price <= trade["stop_loss_price"]:
+                        exit_price = trade["stop_loss_price"]
+                        print(f"Stopped out at {exit_price}")
+                if trade["trade_direction"] == "sell":  # sell/short trade
+                    if price >= trade["stop_loss_price"]:
+                        exit_price = trade["stop_loss_price"]
+                        print(f"Stopped out at {exit_price}")
+                if unrealized_pnl >= 1500:
                     exit_price = price
                     print(f"TP/SL hit at market: {exit_price}")
                 if exit_price is not None:
@@ -331,37 +370,39 @@ def train_and_save_model():
                     unrealized_pnl = 0
             elif not is_in_cooldown(current_time, last_trade_time):
                 #Long Entry
-                if macd_recently_crossed_bullish and price_above_ema_33 and angle >= 30 and (bar["ema_7_5m"] > bar["ema_17_5m"] > bar["ema_33_5m"]):
-                    entry_price = price
-                    trade = {
-                        "entry_step": current_time,
-                        "entry_price": entry_price,
-                        "entry_time": bar["datetime"],
-                        "stop_loss_price": entry_price - 5,
-                        "break_even_set": False,
-                        "trade_direction": "buy"
-                    }
-                    last_trade_time = current_time
-                    print(f"Entered trade at {entry_price}")
+                if is_long_allowed(price,ema_9_60m,ema_9_angle_60m):
+                    if macd_recently_crossed_bullish and price_above_ema_33 and angle >= 30 and (bar["ema_7_5m"] > bar["ema_17_5m"] > bar["ema_33_5m"]):
+                        entry_price = price
+                        trade = {
+                            "entry_step": current_time,
+                            "entry_price": entry_price,
+                            "entry_time": bar["datetime"],
+                            "stop_loss_price": entry_price - 7,
+                            "break_even_set": False,
+                            "trade_direction": "buy"
+                        }
+                        last_trade_time = current_time
+                        print(f"Entered trade at {entry_price}")
                 
-                # # Short Entry
-                # if (
-                #     macd_recently_crossed_bearish
-                #     and price_below_ema_7
-                #     and angle <= -30
-                #     and (bar["ema_7_5m"] < bar["ema_17_5m"] < bar["ema_33_5m"])
-                # ):
-                #     entry_price = price
-                #     trade = {
-                #         "entry_step": current_time,
-                #         "entry_price": entry_price,
-                #         "entry_time": bar["datetime"],
-                #         "stop_loss_price": entry_price + 5,  # SL is above for shorts
-                #         "break_even_set": False,
-                #         "trade_direction": "sell"
-                #     }
-                #     last_trade_time = current_time
-                #     print(f"Entered SHORT at {entry_price}")
+                #Short Entry
+                if is_short_allowed(price,ema_9_60m,ema_9_angle_60m):
+                    if (
+                        macd_recently_crossed_bearish
+                        and price_below_ema_7
+                        and angle <= -30
+                        and (bar["ema_7_5m"] < bar["ema_17_5m"] < bar["ema_33_5m"])
+                    ):
+                        entry_price = price
+                        trade = {
+                            "entry_step": current_time,
+                            "entry_price": entry_price,
+                            "entry_time": bar["datetime"],
+                            "stop_loss_price": entry_price + 7,  # SL is above for shorts
+                            "break_even_set": False,
+                            "trade_direction": "sell"
+                        }
+                        last_trade_time = current_time
+                        print(f"Entered SHORT at {entry_price}")
             step_idx += 1
             if step_idx >= len(df):
                 with open("trades_log.json", "w") as f:
