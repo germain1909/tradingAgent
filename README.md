@@ -19,8 +19,8 @@ curl -X 'POST' \
   -H 'accept: text/plain' \
   -H 'Content-Type: application/json' \
   -d '{
-  "userName": "string",
-  "apiKey": "string"
+  "userName": "saintgermain",
+  "apiKey": "apikey"
 }'
 ```
 #Above will return the token then you have to validate the token

@@ -70,7 +70,7 @@ def is_in_cooldown(current_time, last_trade_time):
 
 
 def is_long_allowed(price, ema_9_60m, ema_9_angle_60m):
-    return price > ema_9_60m and ema_9_angle_60m > 10
+    return price > ema_9_60m and ema_9_angle_60m > 3
 
 def is_short_allowed(price, ema_9_60m, ema_9_angle_60m):
     return price < ema_9_60m and ema_9_angle_60m < -3
@@ -101,7 +101,7 @@ def train_and_save_model():
         # ─── A. Data Prep (multi-day JSON) ──────────────────────
         all_bars = []
         # adjust the path to where you dumped your daily files
-        for json_file in sorted(glob.glob("data/month_json/*.json")):
+        for json_file in sorted(glob.glob("data/month_json_june/*.json")):
                 with open(json_file, "r") as f:
                      raw = json.load(f)
                 # raw["bars"] is in reverse chronological order; reverse it
@@ -347,8 +347,14 @@ def train_and_save_model():
                     trade["break_even_set"] = True
                     print(f"Moved SL to breakeven at {trade['stop_loss_price']}")
                 # Check if stop-loss or target hit
+                #Trade exit logic
                 exit_price = None
-                if trade["trade_direction"] == "buy":
+                # Profit target first
+                if unrealized_pnl >= 700:
+                    exit_price = price
+                    trade["close_reason"] = "target"
+                    print(f"TP hit at market: {exit_price}")
+                elif trade["trade_direction"] == "buy":
                     if price <= trade["stop_loss_price"]:
                         exit_price = trade["stop_loss_price"]
                         print(f"Stopped out at {exit_price}")
@@ -358,7 +364,7 @@ def train_and_save_model():
                     #     exit_price = price
                     #     print(f"EMA 50 angle dropped below 10, exiting LONG at {exit_price}")
                     #     trade["close_reason"] = "angle"
-                if trade["trade_direction"] == "sell":  # sell/short trade
+                elif trade["trade_direction"] == "sell":  # sell/short trade
                     if price >= trade["stop_loss_price"]:
                         exit_price = trade["stop_loss_price"]
                         print(f"Stopped out at {exit_price}")
@@ -368,9 +374,7 @@ def train_and_save_model():
                     #     exit_price = price
                     #     print(f"EMA 50 angle crossed above -10, exiting SHORT at {exit_price}")
                     #     trade["close_reason"] = "angle"
-                if unrealized_pnl >= 700:
-                    exit_price = price
-                    print(f"TP/SL hit at market: {exit_price}")
+                
                 if exit_price is not None:
                     trade["exit_step"] = current_time
                     trade["exit_time"] = bar["datetime"]
