@@ -70,10 +70,10 @@ def is_in_cooldown(current_time, last_trade_time):
 
 
 def is_long_allowed(price, ema_9_60m, ema_9_angle_60m):
-    return price > ema_9_60m and ema_9_angle_60m > 15
+    return price > ema_9_60m and ema_9_angle_60m > 10
 
 def is_short_allowed(price, ema_9_60m, ema_9_angle_60m):
-    return price < ema_9_60m and ema_9_angle_60m < -15
+    return price < ema_9_60m and ema_9_angle_60m < -3
 
 
 
@@ -141,6 +141,7 @@ def train_and_save_model():
         # 1) 1-min indicators
         df["ema_50"]  = df["price"].ewm(span=50,  adjust=False).mean()
         df["ema_50_slope"] = df["ema_50"].rolling(window=5).apply(linear_slope, raw=False)
+        df["ema_50_angle_1m"] = df["ema_50"].rolling(window=5).apply(ema_slope_angle, raw=False)
         # df["ema_200"] = df["price"].ewm(span=200, adjust=False).mean()
         typ = (df["high"] + df["low"] + df["price"])/3
         df["vwap"]    = (typ * df["volume"]).cumsum() / df["volume"].cumsum()
@@ -296,7 +297,8 @@ def train_and_save_model():
         unrealized_pnl = 0
         balance  = 0
         last_trade_time = None
-        break_even_trigger = 700  # Unrealized PnL where you move SL to breakeven
+        break_even_trigger = 500  # Unrealized PnL where you move SL to breakeven
+        tick_size = 1
 
         while not done:
             #if at the end of data set
@@ -314,7 +316,9 @@ def train_and_save_model():
             min_volatility = df["atr_14_1m"].rolling(100).median()
             ema_9_60m = bar["ema_9_60m"]
             ema_9_angle_60m = bar["ema_9_angle_60m"]
-            
+            ema_50_1min_slope = bar["ema_50_slope"]
+            ema_50_angle = bar["ema_50"]
+            ema_50 = bar["ema_50"]
 
             #Bullish Rececent crosses & conditions
             recent_crosses = df["macd_cross_bullish_5m"].iloc[step_idx - 10:step_idx + 1]
@@ -348,11 +352,23 @@ def train_and_save_model():
                     if price <= trade["stop_loss_price"]:
                         exit_price = trade["stop_loss_price"]
                         print(f"Stopped out at {exit_price}")
+                        trade["close_reason"] = "stop loss hit"
+                    # EMA angle-based exit
+                    # elif ema_50_angle < 0:
+                    #     exit_price = price
+                    #     print(f"EMA 50 angle dropped below 10, exiting LONG at {exit_price}")
+                    #     trade["close_reason"] = "angle"
                 if trade["trade_direction"] == "sell":  # sell/short trade
                     if price >= trade["stop_loss_price"]:
                         exit_price = trade["stop_loss_price"]
                         print(f"Stopped out at {exit_price}")
-                if unrealized_pnl >= 1500:
+                        trade["close_reason"] = "stop loss hit"
+                        # EMA angle-based exit
+                    # elif ema_50_angle > 0:
+                    #     exit_price = price
+                    #     print(f"EMA 50 angle crossed above -10, exiting SHORT at {exit_price}")
+                    #     trade["close_reason"] = "angle"
+                if unrealized_pnl >= 700:
                     exit_price = price
                     print(f"TP/SL hit at market: {exit_price}")
                 if exit_price is not None:
@@ -371,13 +387,15 @@ def train_and_save_model():
             elif not is_in_cooldown(current_time, last_trade_time):
                 #Long Entry
                 if is_long_allowed(price,ema_9_60m,ema_9_angle_60m):
-                    if macd_recently_crossed_bullish and price_above_ema_33 and angle >= 30 and (bar["ema_7_5m"] > bar["ema_17_5m"] > bar["ema_33_5m"]):
+                    if macd_recently_crossed_bullish and ema_50_angle >= 4 :
                         entry_price = price
+                        stop_loss_price = bar["ema_50"] - (tick_size * 1)
+                        stop_loss_price = entry_price - (tick_size * 4) if (entry_price - stop_loss_price) > 400 else stop_loss_price
                         trade = {
                             "entry_step": current_time,
                             "entry_price": entry_price,
                             "entry_time": bar["datetime"],
-                            "stop_loss_price": entry_price - 7,
+                            "stop_loss_price": stop_loss_price,
                             "break_even_set": False,
                             "trade_direction": "buy"
                         }
@@ -388,16 +406,15 @@ def train_and_save_model():
                 if is_short_allowed(price,ema_9_60m,ema_9_angle_60m):
                     if (
                         macd_recently_crossed_bearish
-                        and price_below_ema_7
-                        and angle <= -30
-                        and (bar["ema_7_5m"] < bar["ema_17_5m"] < bar["ema_33_5m"])
                     ):
                         entry_price = price
+                        stop_loss_price = bar["ema_50"] + (tick_size * 1)
+                        stop_loss_price = entry_price + (tick_size * 4) if (stop_loss_price - entry_price) > 400 else stop_loss_price
                         trade = {
                             "entry_step": current_time,
                             "entry_price": entry_price,
                             "entry_time": bar["datetime"],
-                            "stop_loss_price": entry_price + 7,  # SL is above for shorts
+                            "stop_loss_price": stop_loss_price,  # SL is above for shorts
                             "break_even_set": False,
                             "trade_direction": "sell"
                         }
