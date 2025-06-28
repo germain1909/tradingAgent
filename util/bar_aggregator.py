@@ -9,10 +9,15 @@ class BarAggregator:
     def get_bar_timestamp(self, timestamp_str):
         dt = datetime.fromisoformat(timestamp_str.rstrip('Z'))
         return dt.replace(second=0, microsecond=0)
+    
+    def get_latest_completed_bar(self):
+        if len(self.bars) == 0:
+            return None
+        return self.bars.pop(0)  # or self.bars[-1] if you don’t want to pop
 
     def on_trade(self, trade):
         price = trade['price']
-        quantity = trade['quantity']
+        quantity = trade['volume']
         timestamp = trade['timestamp']
 
         bar_time = self.get_bar_timestamp(timestamp)
