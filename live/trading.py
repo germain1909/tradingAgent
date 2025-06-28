@@ -33,7 +33,7 @@ def bar_to_json(bar):
     }
 
 
-def on_gateway_trade(args):
+def on_gateway_trade(args,writer=None):
     raw_trade = args[0]  # Extract actual trade
     trade = {
         "price": raw_trade["Price"],
@@ -51,8 +51,8 @@ def on_gateway_trade(args):
         #TODO we need to update to handle TOPSTEP data structure
         bar_json = bar_to_json(new_bar)
         print(bar_json)
-        writer = BarFileWriter("bars.json", max_lines=1000)
-        writer.append_bar(bar_json)
+        if writer:
+            writer.append_bar(bar_json)
     else:
         print("No completed bars yet.")
 
@@ -104,6 +104,7 @@ def setup_signalr_connection():
 
 def simulate_trades():
     print("📈 Starting smart trade simulation...")
+    writer = BarFileWriter("bars.json", max_lines=1000)
     
 
     price = 2350.0
@@ -142,7 +143,7 @@ def simulate_trades():
             }
 
             print("[MockTrade]", mock_trade)
-            on_gateway_trade([mock_trade])
+            on_gateway_trade([mock_trade],writer=writer)
 
             ticks += 1
             time.sleep(1.5)  # 1.5 sec between trades
