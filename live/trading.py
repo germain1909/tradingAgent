@@ -59,6 +59,7 @@ def on_gateway_trade(args,writer=None):
 
 
 def setup_signalr_connection():
+    writer = BarFileWriter("bars.json", max_lines=1000)
     hub_connection = HubConnectionBuilder()\
         .with_url(
             "https://rtc.topstepx.com/hubs/market",
@@ -75,7 +76,7 @@ def setup_signalr_connection():
         .build()
 
     # Register callbacks
-    hub_connection.on("GatewayTrade", on_gateway_trade)
+    hub_connection.on("GatewayTrade", partial(on_gateway_trade, writer=writer))
     # hub_connection.on("GatewayQuote", on_gateway_quote)
     # hub_connection.on("GatewayDepth", on_gateway_depth)
 
