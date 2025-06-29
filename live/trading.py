@@ -6,16 +6,30 @@ from util.bar_aggregator import BarAggregator
 import random
 from datetime import datetime
 from util.BarFileWriter import BarFileWriter
+from util.BarHistory import BarHistory
 from functools import partial
+from util.HistoricalFetcher import HistoricalFetcher
 
 
 
+
+ASSET_ID = "CON.F.US.GCE.Q25"
+OUTPUT_DIR = "data/month_json"
+TOKEN = "TOKEN"
+HEADERS = {
+    "accept": "application/json",
+    "Content-Type": "application/json",
+    "Authorization": f"Bearer {TOKEN}"
+}
 
 LIVE_MODE = False  # Set to True when market is open
 CONTRACT_ID = "CON.F.US.GCE.Q25"
 
 # Instantiate the aggregator once
 aggregator = BarAggregator()
+bar_history = BarHistory()
+fetcher = HistoricalFetcher(ASSET_ID, OUTPUT_DIR, HEADERS)
+
 
 
 
@@ -34,6 +48,7 @@ def bar_to_json(bar):
 
 
 def on_gateway_trade(args,writer=None):
+    print("[RawGatewayTrade]", args[0])  # print raw trade data from the market
     raw_trade = args[0]  # Extract actual trade
     trade = {
         "price": raw_trade["Price"],
@@ -51,6 +66,7 @@ def on_gateway_trade(args,writer=None):
         #TODO we need to update to handle TOPSTEP data structure
         bar_json = bar_to_json(new_bar)
         print(bar_json)
+        bar_history.add_bar(bar_json)
         if writer:
             writer.append_bar(bar_json)
     else:
@@ -100,6 +116,7 @@ def setup_signalr_connection():
         hub_connection.send("UnsubscribeContractTrades", [CONTRACT_ID])
         # hub_connection.send("UnsubscribeContractMarketDepth", [CONTRACT_ID])
         hub_connection.stop()
+        print("🛑 Live Connection interrupted.")
 
 
 
