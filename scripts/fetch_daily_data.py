@@ -6,11 +6,11 @@ from datetime import datetime, timedelta
 # === CONFIG ===
 ASSET_ID = "CON.F.US.GCE.Q25"
 OUTPUT_DIR = "data/month_json"
-TOKEN = "Token"  # ← replace with your real token
+TOKEN = "ADD_TOKEN_HERE"  # ← replace with your real token
 HEADERS = {
     "accept": "application/json",
     "Content-Type": "application/json",
-    "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjIyNzQ3NiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL3NpZCI6ImNhN2U5MzFhLTE1Y2ItNDNkZC05MjkwLWQyYjUwOTIwNDdhOSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJzYWludGdlcm1haW4iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJ1c2VyIiwibXNkIjoiQ01FX1RPQiIsIm1mYSI6InZlcmlmaWVkIiwiZXhwIjoxNzUwNTQ1OTgxfQ.OV-oInwvZ6Acaaw8uAFi-6Bv9asyslz-mPqv1kP9Z9M"
+    "Authorization": f"Bearer {TOKEN}"
 }
 
 def fetch_and_save_day(date_str):
@@ -54,4 +54,4 @@ def run_batch_fetch(start_date, end_date):
 
 # === RUN THIS ===
 if __name__ == "__main__":
-    run_batch_fetch("2025-05-25", "2025-05-28")
+    run_batch_fetch("2025-06-22", "2025-06-27")
