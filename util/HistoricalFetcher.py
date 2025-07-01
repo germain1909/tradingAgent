@@ -3,6 +3,8 @@ import requests
 import os
 import json
 from datetime import datetime, timedelta, timezone
+import pandas as pd
+import sys
 
 
 class HistoricalFetcher:
@@ -66,11 +68,12 @@ class HistoricalFetcher:
         else:
             print("⚠️ Warm-up data fetch completed with errors.")
 
-    def fetch_past_hours(self, hours=10):
+    def fetch_past_hours(self, hours=10) -> pd.DataFrame:
         """
         Fetch historical bars for the past `hours` hours ending 1 minute before now.
+        Returns the data as a pandas DataFrame.
         """
-        now = datetime.now(timezone.utc)  # Always in UTC for API compatibility
+        now = datetime.now(timezone.utc)
         end_time = now - timedelta(minutes=1)
         start_time = end_time - timedelta(hours=hours)
 
@@ -92,13 +95,39 @@ class HistoricalFetcher:
         )
 
         if response.status_code == 200:
-            bars = response.json()
+            raw = response.json()
+            print(raw)
+            bars = raw["bars"][::-1]
+            
+            # Save to file if you want for backup
             filename = f"{self.asset_id.split('.')[-1]}_{start_time.strftime('%Y%m%d_%H%M')}_to_{end_time.strftime('%Y%m%d_%H%M')}.json"
             filepath = os.path.join(self.output_dir, filename)
+
+            # Create directory if it doesn't exist
+            os.makedirs(self.output_dir, exist_ok=True)
+
             with open(filepath, "w") as f:
-                json.dump(bars, f, indent=2)
+                json.dump({"bars": bars}, f, indent=2)
             print(f"✅ Saved: {filepath}")
+
+            # Convert to DataFrame
+
+            df = pd.DataFrame(bars).rename(columns={
+                "t": "timestamp",
+                "o": "open",
+                "h": "high",
+                "l": "low",
+                "c": "price",
+                "v": "volume",
+            })
+            
+            if not df.empty:
+                df['timestamp'] = pd.to_datetime(df['timestamp'])
+                df.set_index('timestamp', inplace=True)
+                df.sort_index(inplace=True)
             self.warm_up_complete = True
+            return df
         else:
             print(f"❌ Failed to fetch past {hours} hours: {response.status_code} {response.text}")
             self.warm_up_complete = False
+            sys.exit(1)  # Quit immediately with exit code 1

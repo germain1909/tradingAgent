@@ -14,8 +14,8 @@ from util.HistoricalFetcher import HistoricalFetcher
 
 
 ASSET_ID = "CON.F.US.GCE.Q25"
-OUTPUT_DIR = "data/month_json"
-TOKEN = "TOKEN"
+OUTPUT_DIR = "data/warmup"
+TOKEN = "UPDATE_TOKEN_HERE"
 HEADERS = {
     "accept": "application/json",
     "Content-Type": "application/json",
@@ -38,12 +38,12 @@ def trade():
 
 def bar_to_json(bar):
     return {
-        "t": bar["timestamp"].isoformat(),
-        "o": bar["open"],
-        "h": bar["high"],
-        "l": bar["low"],
-        "c": bar["close"],
-        "v": bar["volume"],
+        "timestamp": bar["timestamp"].isoformat() if isinstance(bar["timestamp"], datetime) else bar["timestamp"],
+        "open": bar["open"],
+        "high": bar["high"],
+        "low": bar["low"],
+        "close": bar["close"],
+        "volume": bar["volume"]
     }
 
 
@@ -80,7 +80,7 @@ def setup_signalr_connection():
         .with_url(
             "https://rtc.topstepx.com/hubs/market",
             options={
-                "access_token_factory": lambda: JWT_TOKEN
+                "access_token_factory": lambda: TOKEN
             })\
         .configure_logging(logging.INFO)\
         .with_automatic_reconnect({
@@ -167,6 +167,36 @@ def simulate_trades():
             time.sleep(1.5)  # 1.5 sec between trades
     except KeyboardInterrupt:
         print("🛑 Simulation interrupted.")
+
+
+
+print("⏳ Fetching warm-up data...")
+df = fetcher.fetch_past_hours(10)
+print(df.head(1))
+
+#When using iterrows(), the timestamp is in row.name, not row["timestamp"].
+#so You could reset the index first:
+#rename index to timestamp
+
+df.index.name = "timestamp"
+df = df.reset_index()
+
+if df.empty:
+    print("⚠️ No warm-up data fetched. Trading logic may not behave as expected.")
+else:
+    print(f"✅ Warm-up data received: {len(df)} rows.")
+
+    for _, row in df.iterrows():
+        bar = {
+            "timestamp": row["timestamp"],
+            "open": row["open"],
+            "high": row["high"],
+            "low": row["low"],
+            "price": row["price"],
+            "volume": row["volume"]
+        }
+        bar_history.add_bar(bar)
+
 
 # Call the function to test
 if __name__ == "__main__":

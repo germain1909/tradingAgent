@@ -3,6 +3,8 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 import numpy as np
 from scipy.stats import linregress
+from typing import Optional, Dict
+
 
 
  # 2. Define slope calculation function using linear regression
@@ -152,7 +154,7 @@ class BarHistory:
 
         return df
 
-    def get_latest_bar(self) -> dict | None:
+    def get_latest_bar(self) -> Optional[Dict]:
         """
         Get the most recent completed bar as a dict.
         """
