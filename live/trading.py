@@ -18,7 +18,7 @@ import glob
 
 
 
-
+#TOPSTEP Configuration
 ASSET_ID = "CON.F.US.GCE.Q25"
 OUTPUT_DIR = "data/warmup"
 TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjIyNzQ3NiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL3NpZCI6ImQ5MjI2OTBmLTg1MjItNDZmOS1hYTljLTAyNmU2ZTRjMWJjMiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJzYWludGdlcm1haW4iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJ1c2VyIiwibXNkIjoiQ01FX1RPQiIsIm1mYSI6InZlcmlmaWVkIiwiZXhwIjoxNzUxOTM0NDY4fQ.7FVlm-_VRot2HaRlSyp5V9MhAZL8qI27lDiv9vMb3yw"
@@ -34,6 +34,7 @@ LIVE = "LIVE"
 SIM = "SIM"
 MODE = BACKTEST # BACKTEST or SIM or LIVE
 CONTRACT_ID = "CON.F.US.GCE.Q25"
+
 
 # Instantiate the aggregator once
 aggregator = BarAggregator()

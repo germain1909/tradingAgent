@@ -1,6 +1,12 @@
 import os
 import json
 import pandas as pd
+from util.SlackNotifier import SlackNotifier
+
+
+#Slack Configuration 
+SLACK_URL = "https://hooks.slack.com/services/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"
+slack_notifier = SlackNotifier(SLACK_URL)
 
 class Strategy:
     def __init__(self, executor=None):
@@ -74,36 +80,12 @@ class Strategy:
         return False
 
     def enter_trade(self, direction, price, current_time, bar):
-        ema_50 = bar["ema_50"]
-        max_stop_distance = 4 * self.tick_size  # Cap max SL at 4 ticks (or whatever you want)
+        stop_amount = 4  # $4 move = $400 loss per your PnL calc
 
         if direction == "buy":
-            # Ideal stop is just below EMA
-            stop_loss_price = ema_50 - self.tick_size
-
-            # Ensure it's below price
-            if stop_loss_price >= price:
-                stop_loss_price = price - max_stop_distance
-
+            stop_loss_price = price - stop_amount
         else:  # sell
-            # Ideal stop is just above EMA
-            stop_loss_price = ema_50 + self.tick_size
-
-            # Ensure it's above price
-            if stop_loss_price <= price:
-                stop_loss_price = price + max_stop_distance
-
-        # Safety net: prevent SL from being too far
-        if abs(price - stop_loss_price) > max_stop_distance:
-            if direction == "buy":
-                stop_loss_price = price - max_stop_distance
-            else:
-                stop_loss_price = price + max_stop_distance
-
-        # Final safety assertion
-        assert (direction == "buy" and stop_loss_price < price) or \
-            (direction == "sell" and stop_loss_price > price), \
-            f"Invalid stop loss {stop_loss_price} for {direction} trade at {price}"
+            stop_loss_price = price + stop_amount
 
         self.trade = {
             "entry_step": current_time,
@@ -114,6 +96,11 @@ class Strategy:
             "trade_direction": direction
         }
         self.last_trade_time = current_time
+
+        # Slack notification if available
+        if hasattr(self, "notifier") and self.notifier:
+            self.notifier.send(f"🚀 Entered {direction.upper()} at {price} | SL: {stop_loss_price}")
+
         print(f"🚀 Entered {direction.upper()} at {price} | SL: {stop_loss_price}")
 
         return True
@@ -186,6 +173,7 @@ class Strategy:
         self.trade["balance"] = self.balance
 
         print(f"💰 {self.trade['trade_direction'].upper()} exit at {exit_price} | PnL: {pnl:.2f} | Reason: {reason}")
+        slack_notifier.send((f"💰 {self.trade['trade_direction'].upper()} exit at {exit_price} | PnL: {pnl:.2f} | Reason: {reason}"))
 
         # TODO: Send exit order via executor (live trading)
         # if self.executor:
