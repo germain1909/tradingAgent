@@ -74,7 +74,7 @@ class HistoricalFetcher:
         Returns the data as a pandas DataFrame.
         """
         now = datetime.now(timezone.utc)
-        end_time = now - timedelta(minutes=1)
+        end_time = now
         start_time = end_time - timedelta(hours=hours)
 
         payload = {

@@ -7,15 +7,21 @@ import random
 from datetime import datetime
 from util.BarFileWriter import BarFileWriter
 from util.BarHistory import BarHistory
+from util.Strategy import Strategy
 from functools import partial
 from util.HistoricalFetcher import HistoricalFetcher
+import os
+import pandas as pd
+import json
+import glob
+
 
 
 
 
 ASSET_ID = "CON.F.US.GCE.Q25"
 OUTPUT_DIR = "data/warmup"
-TOKEN = "UPDATE_TOKEN_HERE"
+TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjIyNzQ3NiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL3NpZCI6ImQ5MjI2OTBmLTg1MjItNDZmOS1hYTljLTAyNmU2ZTRjMWJjMiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJzYWludGdlcm1haW4iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJ1c2VyIiwibXNkIjoiQ01FX1RPQiIsIm1mYSI6InZlcmlmaWVkIiwiZXhwIjoxNzUxOTM0NDY4fQ.7FVlm-_VRot2HaRlSyp5V9MhAZL8qI27lDiv9vMb3yw"
 HEADERS = {
     "accept": "application/json",
     "Content-Type": "application/json",
@@ -23,6 +29,10 @@ HEADERS = {
 }
 
 LIVE_MODE = False  # Set to True when market is open
+BACKTEST = "BACKTEST"
+LIVE = "LIVE"
+SIM = "SIM"
+MODE = BACKTEST # BACKTEST or SIM or LIVE
 CONTRACT_ID = "CON.F.US.GCE.Q25"
 
 # Instantiate the aggregator once
@@ -46,6 +56,31 @@ def bar_to_json(bar):
         "volume": bar["volume"]
     }
 
+
+def save_dataframes(dataframes: dict, filetype="xlsx", folder="logs", tag=""):
+    """
+    Save multiple DataFrames to disk with timestamped filenames.
+
+    Args:
+        dataframes (dict): Dictionary where keys are names and values are DataFrames.
+        filetype (str): "csv" or "xlsx".
+        folder (str): Destination folder.
+        tag (str): Optional tag to include in the filename (e.g. 'warmup', 'backtest').
+    """
+    os.makedirs(folder, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+    for name, df in dataframes.items():
+        filename = f"{folder}/{tag}_{name}_{timestamp}.{filetype}" if tag else f"{folder}/{name}_{timestamp}.{filetype}"
+
+        if filetype == "csv":
+            df.to_csv(filename, index=False)
+        elif filetype == "xlsx":
+            df.to_excel(filename, index=False)
+        else:
+            raise ValueError("Unsupported filetype. Use 'csv' or 'xlsx'.")
+
+        print(f"Saved: {filename}")
 
 def on_gateway_trade(args,writer=None):
     print("[RawGatewayTrade]", args[0])  # print raw trade data from the market
@@ -169,6 +204,83 @@ def simulate_trades():
         print("🛑 Simulation interrupted.")
 
 
+def run_backtest():
+    print("🔍 Running backtest...")
+
+    # ─── A. Load & Combine Multi-Day JSON Files ──────────────
+    all_bars = []
+    for json_file in sorted(glob.glob("data/month_json/*.json")):
+        with open(json_file, "r") as f:
+            raw = json.load(f)
+
+        bars = raw["bars"][::-1]  # reverse to chronological order
+        all_bars.extend(bars)
+
+    # ─── B. Convert to DataFrame ──────────────────────────────
+    df = pd.DataFrame(all_bars).rename(columns={
+        "t": "timestamp",
+        "o": "open",
+        "h": "high",
+        "l": "low",
+        "c": "price",
+        "v": "volume",
+    })
+
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    df.set_index("timestamp", inplace=True)
+    if df.index.tz is None:
+        df.index = df.index.tz_localize("US/Eastern")
+    else:
+        df.index = df.index.tz_convert("US/Eastern")
+
+    # ─── C. Load into BarHistory & Enrich Once ───────────────
+    bar_history = BarHistory()
+    strategy = Strategy()
+
+    # Add all bars at once
+    for idx, row in df.iterrows():
+        bar = {
+            "timestamp": idx,
+            "open": row["open"],
+            "high": row["high"],
+            "low": row["low"],
+            "price": row["price"],
+            "volume": row["volume"]
+        }
+        bar_history.add_bar(bar)
+
+    # Enrich once after all bars are loaded
+    enriched_df = bar_history.get_enriched_dataframe()
+    print(f"Total bars in enriched_df: {len(enriched_df)}")
+
+
+    # Make a copy to avoid modifying original
+    enriched_df_with_ts = enriched_df.copy()
+
+    # Add timestamp column from index
+    enriched_df_with_ts["timestamp"] = enriched_df_with_ts.index
+    #Save dataframes to csv
+    save_dataframes({
+        "enriched_df_with_ts": enriched_df_with_ts
+    }, filetype="csv", tag="backtest")
+
+
+    # ─── D. Run Strategy Over Enriched Data ───────────────────
+    for i in range(len(enriched_df)):
+        if i < 20:
+            continue  # skip warmup period
+
+        current_bar = enriched_df.iloc[i]
+        current_time = enriched_df.index[i]
+
+        strategy.should_execute(current_bar, enriched_df, current_time)
+
+    print("📉 Backtest complete.")
+
+
+
+
+
 
 print("⏳ Fetching warm-up data...")
 df = fetcher.fetch_past_hours(10)
@@ -177,14 +289,23 @@ print(df.head(1))
 #When using iterrows(), the timestamp is in row.name, not row["timestamp"].
 #so You could reset the index first:
 #rename index to timestamp
-
-df.index.name = "timestamp"
-df = df.reset_index()
-
 if df.empty:
     print("⚠️ No warm-up data fetched. Trading logic may not behave as expected.")
 else:
     print(f"✅ Warm-up data received: {len(df)} rows.")
+
+    # Localize and convert timestamp to EST
+    df.index = pd.to_datetime(df.index)
+    if df.index.tz is None:
+        df.index = df.index.tz_localize("UTC")
+    df.index = df.index.tz_convert("US/Eastern")
+    df.index.name = "timestamp"
+    df = df.reset_index()
+
+    #Save dataframes to csv
+    save_dataframes({
+        "df": df
+    }, filetype="csv", tag="warmup")
 
     for _, row in df.iterrows():
         bar = {
@@ -196,14 +317,26 @@ else:
             "volume": row["volume"]
         }
         bar_history.add_bar(bar)
+        
+    print(" Warm-up successful — data loaded and converted to EST.  Time to initialize the Strategy class...")
 
 
 # Call the function to test
 if __name__ == "__main__":
-    if LIVE_MODE:
+    if MODE == "LIVE":
+        print("Live mode selected.")
         setup_signalr_connection()
-    else:
+
+    elif MODE == "SIM":
+        print("Simulation mode selected.")
         simulate_trades()
+
+    elif MODE == "BACKTEST":
+        print("Backtest mode selected.")
+        run_backtest()
+
+    else:
+        raise ValueError(f"Unsupported MODE '{MODE}'. Use BACKTEST, SIM, or LIVE.")
 
 
 

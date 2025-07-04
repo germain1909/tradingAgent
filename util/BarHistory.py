@@ -74,18 +74,18 @@ class BarHistory:
         df = self.get_dataframe()
         if df.empty:
             return df
-        self.set_timezone_EST(df)    
-        # Handle timezone: localize if naive, otherwise just convert
+
+        self.set_timezone_EST(df)
+
         if df.index.tz is None:
             df.index = df.index.tz_localize("UTC").tz_convert("US/Eastern")
         else:
             df.index = df.index.tz_convert("US/Eastern")
+        
         print("Index type:", type(df.index), "| sample index:", df.index[:3])
 
-
-
-        # 1-Minute EMA(50) and its slope/angle
-        df["ema_50"] = df["close"].ewm(span=50, adjust=False).mean()
+        # 1-Minute EMA(50) and its slope/angle using price
+        df["ema_50"] = df["price"].ewm(span=50, adjust=False).mean()
         df["ema_50_slope"] = df["ema_50"].rolling(window=5).apply(linear_slope, raw=False)
         df["ema_50_angle_1m"] = df["ema_50"].rolling(window=5).apply(ema_slope_angle, raw=False)
 
@@ -93,17 +93,17 @@ class BarHistory:
         df["true_range_1m"] = (df["high"] - df["low"]).clip(lower=0)
         df["atr_14_1m"] = df["true_range_1m"].rolling(14).mean()
 
-        # 5-Minute Resample for MACD and EMA7/17/33
-        df5 = df[["open", "high", "low", "close", "volume"]].resample("5T").agg({
+        # 5-Minute Resample for MACD and EMA7/17/33 (use price instead of close)
+        df5 = df[["open", "high", "low", "price", "volume"]].resample("5T").agg({
             "open": "first",
             "high": "max",
             "low": "min",
-            "close": "last",
+            "price": "last",
             "volume": "sum"
         })
 
-        ema12_5 = df5["close"].ewm(span=12, adjust=False).mean()
-        ema26_5 = df5["close"].ewm(span=26, adjust=False).mean()
+        ema12_5 = df5["price"].ewm(span=12, adjust=False).mean()
+        ema26_5 = df5["price"].ewm(span=26, adjust=False).mean()
         macd_5 = ema12_5 - ema26_5
         macd_signal_5 = macd_5.ewm(span=9, adjust=False).mean()
 
@@ -112,27 +112,25 @@ class BarHistory:
         df5["macd_cross_bullish_5m"] = ((macd_5.shift(1) <= macd_signal_5.shift(1)) & (macd_5 > macd_signal_5)).astype(int)
         df5["macd_cross_bearish_5m"] = ((macd_5.shift(1) >= macd_signal_5.shift(1)) & (macd_5 < macd_signal_5)).astype(int)
 
-        df5["ema_7_5m"] = df5["close"].ewm(span=7, adjust=False).mean()
-        df5["ema_17_5m"] = df5["close"].ewm(span=17, adjust=False).mean()
-        df5["ema_33_5m"] = df5["close"].ewm(span=33, adjust=False).mean()
+        df5["ema_7_5m"] = df5["price"].ewm(span=7, adjust=False).mean()
+        df5["ema_17_5m"] = df5["price"].ewm(span=17, adjust=False).mean()
+        df5["ema_33_5m"] = df5["price"].ewm(span=33, adjust=False).mean()
         df5["ema_7_angle_5m"] = df5["ema_7_5m"].rolling(window=5).apply(ema_slope_angle, raw=False)
 
         # 60-Minute Resample for EMA(9) and its slope/angle
-        df60 = df[["open", "high", "low", "close", "volume"]].resample("60T").agg({
+        df60 = df[["open", "high", "low", "price", "volume"]].resample("60T").agg({
             "open": "first",
             "high": "max",
             "low": "min",
-            "close": "last",
+            "price": "last",
             "volume": "sum"
         })
 
-        df60["ema_9_60m"] = df60["close"].ewm(span=9, adjust=False).mean()
+        df60["ema_9_60m"] = df60["price"].ewm(span=9, adjust=False).mean()
         df60["ema_9_slope_60m"] = df60["ema_9_60m"].rolling(window=5).apply(linear_slope, raw=False)
         df60["ema_9_angle_60m"] = df60["ema_9_60m"].rolling(window=5).apply(ema_slope_angle, raw=False)
 
-       # Forward fill relevant indicators back to 1-minute bars
-
-        # 1) Define feature lists for clarity
+        # Join back 5m and 60m features
         five_min_feats = [
             "macd_5m", "macd_signal_5m",
             "macd_cross_bullish_5m", "macd_cross_bearish_5m",
@@ -143,17 +141,12 @@ class BarHistory:
             "ema_9_60m", "ema_9_slope_60m", "ema_9_angle_60m"
         ]
 
-        # 2) Join 5-minute features back to 1-minute bars
         df = df.join(df5[five_min_feats], how="left")
-
-        # 3) Join 60-minute features back to 1-minute bars
         df = df.join(df60[sixty_min_feats], how="left")
-
-        # 4) Forward-fill higher timeframe indicators
         df.fillna(method="ffill", inplace=True)
+        df["timestamp"] = df.index
 
         return df
-
     def get_latest_bar(self) -> Optional[Dict]:
         """
         Get the most recent completed bar as a dict.
