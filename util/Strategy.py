@@ -5,11 +5,11 @@ from util.SlackNotifier import SlackNotifier
 
 
 #Slack Configuration 
-SLACK_URL = "https://hooks.slack.com/services/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"
+SLACK_URL = "https://hooks.slack.com/services/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"
 slack_notifier = SlackNotifier(SLACK_URL)
 
 class Strategy:
-    def __init__(self, executor=None):
+    def __init__(self, executor=None,mode="BACKTEST"):
         self.trade = {}
         self.balance = 0
         self.unrealized_pnl = 0
@@ -17,6 +17,7 @@ class Strategy:
         self.break_even_trigger = 500
         self.tick_size = 1
         self.trades = []
+        self.mode = mode
         # self.executor = executor  
 
     def recent_macd_cross(self, df, current_time, column, lookback=10):
@@ -80,7 +81,7 @@ class Strategy:
         return False
 
     def enter_trade(self, direction, price, current_time, bar):
-        stop_amount = 4  # $4 move = $400 loss per your PnL calc
+        stop_amount = 2  # $4 move = $400 loss per your PnL calc
 
         if direction == "buy":
             stop_loss_price = price - stop_amount
@@ -98,9 +99,18 @@ class Strategy:
         self.last_trade_time = current_time
 
         # Slack notification if available
-        if hasattr(self, "notifier") and self.notifier:
-            self.notifier.send(f"🚀 Entered {direction.upper()} at {price} | SL: {stop_loss_price}")
+        # slack_notifier.send(f"🚀 Entered {direction.upper()} at {price} | SL: {stop_loss_price}")
 
+        #if self.mode == "LIVE":
+        # TODO: Send exit order via executor (live trading)
+        # if self.executor:
+        #     symbol = "GC2"
+        #     qty = 1
+        #     side = "sell" if self.trade["trade_direction"] == "buy" else "buy"
+        #     self.executor.send_order(symbol=symbol, side=side, qty=qty, order_type="market")
+
+
+        
         print(f"🚀 Entered {direction.upper()} at {price} | SL: {stop_loss_price}")
 
         return True
@@ -173,8 +183,9 @@ class Strategy:
         self.trade["balance"] = self.balance
 
         print(f"💰 {self.trade['trade_direction'].upper()} exit at {exit_price} | PnL: {pnl:.2f} | Reason: {reason}")
-        slack_notifier.send((f"💰 {self.trade['trade_direction'].upper()} exit at {exit_price} | PnL: {pnl:.2f} | Reason: {reason}"))
+        # slack_notifier.send((f"💰 {self.trade['trade_direction'].upper()} exit at {exit_price} | PnL: {pnl:.2f} | Reason: {reason}"))
 
+        #if self.mode == "LIVE":
         # TODO: Send exit order via executor (live trading)
         # if self.executor:
         #     symbol = "GC2"

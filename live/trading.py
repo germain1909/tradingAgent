@@ -112,6 +112,7 @@ def on_gateway_trade(args,writer=None):
 
 def setup_signalr_connection():
     writer = BarFileWriter("bars.json", max_lines=1000)
+    strategy = Strategy(mode=LIVE)
     hub_connection = HubConnectionBuilder()\
         .with_url(
             "https://rtc.topstepx.com/hubs/market",
@@ -159,6 +160,7 @@ def setup_signalr_connection():
 def simulate_trades():
     print("📈 Starting smart trade simulation...")
     writer = BarFileWriter("bars.json", max_lines=1000)
+    strategy = Strategy(mode=SIM)
     
 
     price = 2350.0
@@ -236,7 +238,7 @@ def run_backtest():
 
     # ─── C. Load into BarHistory & Enrich Once ───────────────
     bar_history = BarHistory()
-    strategy = Strategy()
+    strategy = Strategy(mode=BACKTEST)
 
     # Add all bars at once
     for idx, row in df.iterrows():
