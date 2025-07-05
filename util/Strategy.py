@@ -18,9 +18,11 @@ class Strategy:
         self.tick_size = 1
         self.trades = []
         self.mode = mode
+        self.swings = []             # Stores detected swings
+        self.last_swing_checked = 0  # Index of last bar checked for swings
         # self.executor = executor  
 
-    def recent_macd_cross(self, df, current_time, column, lookback=10):
+    def recent_macd_cross(self, df, current_time, column, lookback=20):
         """
         Check if a MACD cross occurred within the last `lookback` bars **before** current_time.
         Compatible with both backtest and live.
@@ -28,6 +30,32 @@ class Strategy:
         # Filter to only rows before the current_time
         recent = df[df["timestamp"] < current_time].tail(lookback)
         return recent[column].eq(1).any()
+
+
+    def update_swings(self, df, lookback=5):
+        """
+        Incrementally update swings by checking only new bars.
+        """
+        # Only check new bars since last update
+        start = max(self.last_swing_checked, lookback)
+        end = len(df) - lookback  # Do not check if not enough future bars
+
+        for i in range(start, end):
+            high = df["high"].iloc[i]
+            low = df["low"].iloc[i]
+            # Local high
+            if high == df["high"].iloc[i-lookback:i+lookback+1].max():
+                self.swings.append({'index': df.index[i], 'type': 'High', 'price': high})
+            # Local low
+            if low == df["low"].iloc[i-lookback:i+lookback+1].min():
+                self.swings.append({'index': df.index[i], 'type': 'Low', 'price': low})
+        self.last_swing_checked = end
+
+    def get_last_swing(self, swings, current_index):
+        swings_before = [s for s in swings if s['index'] < current_index]
+        if not swings_before:
+            return None
+        return swings_before[-1]
 
     def in_cooldown(self, current_time):
         return self.last_trade_time is not None and (current_time - self.last_trade_time) < pd.Timedelta(minutes=15)
@@ -52,8 +80,14 @@ class Strategy:
         # recent_bearish_crosses = bar_history_df["macd_cross_bearish_5m"].iloc[-10]
         # macd_recently_crossed_bearish = (recent_bearish_crosses == 1).any()
 
+        #MACD Crosses 
         macd_recent_bullish = self.recent_macd_cross(bar_history_df, current_time, "macd_cross_bullish_5m")
         macd_recent_bearish = self.recent_macd_cross(bar_history_df, current_time, "macd_cross_bearish_5m")
+
+        #Look for a recent highs/lows
+        lookback = 30  # You can tune this as needed
+        self.update_swings(bar_history_df, lookback=lookback)
+        last_swing = self.get_last_swing(self.swings, current_time)
 
 
         
@@ -69,19 +103,21 @@ class Strategy:
             # Long setup
             if price > ema_9_60m and ema_9_angle_60m > 3:
                 if macd_recent_bullish:
-                    print("📈 Long entry confirmed")
-                    return self.enter_trade("buy", price, current_time, bar)
-                
+                    if last_swing and last_swing['type'] == 'Low':
+                        print("📈 Long entry confirmed")
+                        return self.enter_trade("buy", price, current_time, bar)
+                    
             # Short setup
             if price < ema_9_60m and ema_9_angle_60m < -3:
                 if macd_recent_bearish:
-                    print("📉 Short entry confirmed")
-                    return self.enter_trade("sell", price, current_time, bar)
+                    if last_swing and last_swing['type'] == 'High':
+                        print("📉 Short entry confirmed")
+                        return self.enter_trade("sell", price, current_time, bar)
 
         return False
 
     def enter_trade(self, direction, price, current_time, bar):
-        stop_amount = 2  # $4 move = $400 loss per your PnL calc
+        stop_amount = 3  # $4 move = $400 loss per your PnL calc
 
         if direction == "buy":
             stop_loss_price = price - stop_amount
