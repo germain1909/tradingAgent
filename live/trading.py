@@ -10,18 +10,21 @@ from util.BarHistory import BarHistory
 from util.Strategy import Strategy
 from functools import partial
 from util.HistoricalFetcher import HistoricalFetcher
+from util.TopStepExecutor import TopstepExecutor
 import os
 import pandas as pd
 import json
 import glob
 
-
+# SSL Cert
+import certifi
+os.environ["SSL_CERT_FILE"] = certifi.where()
 
 
 #TOPSTEP Configuration
 ASSET_ID = "CON.F.US.GCE.Q25"
 OUTPUT_DIR = "data/warmup"
-TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjIyNzQ3NiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL3NpZCI6ImQ5MjI2OTBmLTg1MjItNDZmOS1hYTljLTAyNmU2ZTRjMWJjMiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJzYWludGdlcm1haW4iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJ1c2VyIiwibXNkIjoiQ01FX1RPQiIsIm1mYSI6InZlcmlmaWVkIiwiZXhwIjoxNzUxOTM0NDY4fQ.7FVlm-_VRot2HaRlSyp5V9MhAZL8qI27lDiv9vMb3yw"
+TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjIyNzQ3NiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL3NpZCI6ImZiN2E0NWY4LWM3MDctNGFjYi04Yzk4LTYwMThlNTcxYWY1NSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJzYWludGdlcm1haW4iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJ1c2VyIiwibXNkIjoiQ01FX1RPQiIsIm1mYSI6InZlcmlmaWVkIiwiZXhwIjoxNzUyNTI3OTA2fQ.iDjja4w8-I7WtjDZ2hNhGfHzIY2yO9ST5tCNrA7sMmk"
 HEADERS = {
     "accept": "application/json",
     "Content-Type": "application/json",
@@ -32,14 +35,16 @@ LIVE_MODE = False  # Set to True when market is open
 BACKTEST = "BACKTEST"
 LIVE = "LIVE"
 SIM = "SIM"
-MODE = BACKTEST # BACKTEST or SIM or LIVE
+MODE = LIVE # BACKTEST or SIM or LIVE
 CONTRACT_ID = "CON.F.US.GCE.Q25"
+ACCOUNT_ID = "7882531"
 
 
 # Instantiate the aggregator once
 aggregator = BarAggregator()
 bar_history = BarHistory()
 fetcher = HistoricalFetcher(ASSET_ID, OUTPUT_DIR, HEADERS)
+topstep_executor  =  TopstepExecutor(ACCOUNT_ID,CONTRACT_ID,HEADERS)
 
 
 
@@ -83,7 +88,7 @@ def save_dataframes(dataframes: dict, filetype="xlsx", folder="logs", tag=""):
 
         print(f"Saved: {filename}")
 
-def on_gateway_trade(args,writer=None):
+def on_gateway_trade(args,writer=None,strategy=None):
     print("[RawGatewayTrade]", args[0])  # print raw trade data from the market
     raw_trade = args[0]  # Extract actual trade
     trade = {
@@ -112,14 +117,12 @@ def on_gateway_trade(args,writer=None):
 
 def setup_signalr_connection():
     writer = BarFileWriter("bars.json", max_lines=1000)
-    strategy = Strategy(mode=LIVE)
+    strategy = Strategy(mode=LIVE,executor=topstep_executor)
     hub_connection = HubConnectionBuilder()\
         .with_url(
-            "https://rtc.topstepx.com/hubs/market",
-            options={
-                "access_token_factory": lambda: TOKEN
-            })\
-        .configure_logging(logging.INFO)\
+            f"https://rtc.topstepx.com/hubs/market?access_token={TOKEN}"
+            )\
+        .configure_logging(logging.DEBUG)\
         .with_automatic_reconnect({
             "type": "raw",
             "keep_alive_interval": 10,
@@ -129,7 +132,7 @@ def setup_signalr_connection():
         .build()
 
     # Register callbacks
-    hub_connection.on("GatewayTrade", partial(on_gateway_trade, writer=writer))
+    hub_connection.on("GatewayTrade", partial(on_gateway_trade, writer=writer, strategy=strategy))
     # hub_connection.on("GatewayQuote", on_gateway_quote)
     # hub_connection.on("GatewayDepth", on_gateway_depth)
 
@@ -141,9 +144,9 @@ def setup_signalr_connection():
     hub_connection.send("SubscribeContractTrades", [CONTRACT_ID])
     # hub_connection.send("SubscribeContractMarketDepth", [CONTRACT_ID])
 
-    print("SignalR connection established. Subscribed to market data.")
+    # print("SignalR connection established. Subscribed to market data.")
 
-    # Keep the connection alive
+    #Keep the connection alive
     try:
         while True:
             time.sleep(1)
@@ -212,7 +215,7 @@ def run_backtest():
 
     # ─── A. Load & Combine Multi-Day JSON Files ──────────────
     all_bars = []
-    for json_file in sorted(glob.glob("data/month_json/*.json")):
+    for json_file in sorted(glob.glob("data/month_json_6_15/*.json")):
         with open(json_file, "r") as f:
             raw = json.load(f)
 
