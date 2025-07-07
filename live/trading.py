@@ -116,6 +116,16 @@ def on_gateway_trade(args,writer=None,strategy=None):
 
 
 def setup_signalr_connection():
+
+    def on_open():
+        print("✅ Connection established!")
+        # Now it's safe to subscribe:
+        hub_connection.send("SubscribeContractTrades", [CONTRACT_ID])
+        # Add more subscriptions if you want:
+        # hub_connection.send("SubscribeContractQuotes", [CONTRACT_ID])
+        # hub_connection.send("SubscribeContractMarketDepth", [CONTRACT_ID])
+
+
     writer = BarFileWriter("bars.json", max_lines=1000)
     strategy = Strategy(mode=LIVE,executor=topstep_executor)
     hub_connection = HubConnectionBuilder()\
@@ -132,6 +142,7 @@ def setup_signalr_connection():
         .build()
 
     # Register callbacks
+    hub_connection.on_open(on_open)  # This is the key line!
     hub_connection.on("GatewayTrade", partial(on_gateway_trade, writer=writer, strategy=strategy))
     # hub_connection.on("GatewayQuote", on_gateway_quote)
     # hub_connection.on("GatewayDepth", on_gateway_depth)
@@ -141,7 +152,7 @@ def setup_signalr_connection():
 
     # Subscribe to the contract's data
     # hub_connection.send("SubscribeContractQuotes", [CONTRACT_ID])
-    hub_connection.send("SubscribeContractTrades", [CONTRACT_ID])
+    # hub_connection.send("SubscribeContractTrades", [CONTRACT_ID])
     # hub_connection.send("SubscribeContractMarketDepth", [CONTRACT_ID])
 
     # print("SignalR connection established. Subscribed to market data.")
