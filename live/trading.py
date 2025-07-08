@@ -89,12 +89,23 @@ def save_dataframes(dataframes: dict, filetype="xlsx", folder="logs", tag=""):
         print(f"Saved: {filename}")
 
 def on_gateway_trade(args,writer=None,strategy=None):
-    print("[RawGatewayTrade]", args[0])  # print raw trade data from the market
-    raw_trade = args[0]  # Extract actual trade
+    if MODE == LIVE:
+        # In live mode, args = [contract_id, [list_of_trades]]
+        trades = args[1] if (isinstance(args, list) and len(args) > 1) else []
+        if not trades:
+            print("[GatewayTrade] No trades found in LIVE mode.")
+            return
+        raw_trade = trades[-1]  # Get the last trade in the list
+        print("[RawGatewayTrade_LIVE]", raw_trade)
+    else:
+        # In SIM or BACKTEST, args = [trade_dict]
+        raw_trade = args[0]
+        print("[RawGatewayTrade_SIM]", raw_trade)
+
     trade = {
-        "price": raw_trade["Price"],
-        "volume": raw_trade["Volume"],
-        "timestamp": raw_trade["UtcTimestamp"]
+        "price": raw_trade["price"],
+        "volume": raw_trade["volume"],
+        "timestamp": raw_trade["timestamp"]
     }
     print("[GatewayTrade]", trade)
     aggregator.on_trade(trade)
@@ -106,10 +117,18 @@ def on_gateway_trade(args,writer=None,strategy=None):
     if new_bar:
         #TODO we need to update to handle TOPSTEP data structure
         bar_json = bar_to_json(new_bar)
+        bar_history.add_bar(bar_json)
         print(bar_json)
         bar_history.add_bar(bar_json)
         if writer:
             writer.append_bar(bar_json)
+        # Enrich and run strategy after each new bar in LIVE/SIM
+        enriched_df = bar_history.get_enriched_dataframe()
+        if len(enriched_df) > 20:  
+            current_bar = enriched_df.iloc[-1]
+            current_time = enriched_df.index[-1]
+            if strategy:
+                strategy.should_execute(current_bar, enriched_df, current_time)
     else:
         print("No completed bars yet.")
 
@@ -132,7 +151,7 @@ def setup_signalr_connection():
         .with_url(
             f"https://rtc.topstepx.com/hubs/market?access_token={TOKEN}"
             )\
-        .configure_logging(logging.DEBUG)\
+        .configure_logging(logging.INFO)\
         .with_automatic_reconnect({
             "type": "raw",
             "keep_alive_interval": 10,
@@ -206,10 +225,10 @@ def simulate_trades():
                 volume = random.randint(1, 5)
 
             mock_trade = {
-                "ContractId": CONTRACT_ID,
-                "Price": round(price, 2),
-                "Volume": volume,
-                "UtcTimestamp": datetime.utcnow().isoformat() + "Z"
+                "contractId": CONTRACT_ID,
+                "price": round(price, 2),
+                "volume": volume,
+                "timestamp": datetime.utcnow().isoformat() + "Z"
             }
 
             print("[MockTrade]", mock_trade)

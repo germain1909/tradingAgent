@@ -20,7 +20,8 @@ class Strategy:
         self.mode = mode
         self.swings = []             # Stores detected swings
         self.last_swing_checked = 0  # Index of last bar checked for swings
-        # self.executor = executor  
+        self.executor = executor  
+        self.order_id = None
 
     def recent_macd_cross(self, df, current_time, column, lookback=20):
         """
@@ -64,9 +65,15 @@ class Strategy:
         price = bar["price"]
         ema_9_60m = bar["ema_9_60m"]
         ema_9_angle_60m = bar["ema_9_angle_60m"]
+        ema_20_15m = bar["ema_20_15m"]
+        ema_20_angle_15m = bar["ema_20_angle_15m"]
         ema_50_angle = bar["ema_50"]
         ema_7 = bar["ema_7_5m"]
         ema_33 = bar["ema_33_5m"]
+        recent_atr_5m = bar_history_df.loc[bar["timestamp"], "atr_14_5m"]
+        if isinstance(recent_atr_5m, pd.Series):
+            recent_atr_5m = recent_atr_5m.iloc[0]
+     
 
         #  #Bullish Rececent crosses & conditions
         # recent_crosses = bar_history_df["macd_cross_bullish_5m"].iloc[-10:]
@@ -80,9 +87,15 @@ class Strategy:
         # recent_bearish_crosses = bar_history_df["macd_cross_bearish_5m"].iloc[-10]
         # macd_recently_crossed_bearish = (recent_bearish_crosses == 1).any()
 
-        #MACD Crosses 
+        #MACD Crosses 5 min 
         macd_recent_bullish = self.recent_macd_cross(bar_history_df, current_time, "macd_cross_bullish_5m")
         macd_recent_bearish = self.recent_macd_cross(bar_history_df, current_time, "macd_cross_bearish_5m")
+
+        #MACD Crosses 15 min 
+        macd_recent_bullish_15m = self.recent_macd_cross(bar_history_df, current_time, "macd_cross_bullish_15m")
+        macd_recent_bearish_15m = self.recent_macd_cross(bar_history_df, current_time, "macd_cross_bearish_15m")
+
+
 
         #Look for a recent highs/lows
         lookback = 30  # You can tune this as needed
@@ -103,26 +116,30 @@ class Strategy:
             # Long setup
             if price > ema_9_60m and ema_9_angle_60m > 3:
                 if macd_recent_bullish:
-                    if last_swing and last_swing['type'] == 'Low':
+                    # if last_swing and last_swing['type'] == 'Low':
+                    if recent_atr_5m > 2.7:
                         print("📈 Long entry confirmed")
                         return self.enter_trade("buy", price, current_time, bar)
                     
             # Short setup
             if price < ema_9_60m and ema_9_angle_60m < -3:
                 if macd_recent_bearish:
-                    if last_swing and last_swing['type'] == 'High':
+                    # if last_swing and last_swing['type'] == 'High':
+                    if recent_atr_5m > 2.8:
                         print("📉 Short entry confirmed")
                         return self.enter_trade("sell", price, current_time, bar)
 
         return False
 
     def enter_trade(self, direction, price, current_time, bar):
-        stop_amount = 3  # $4 move = $400 loss per your PnL calc
+        stop_amount = 2  # $4 move = $400 loss per your PnL calc
 
         if direction == "buy":
             stop_loss_price = price - stop_amount
+            side = 0  # BUY = 0
         else:  # sell
             stop_loss_price = price + stop_amount
+            side = 1  # SELL = 1
 
         self.trade = {
             "entry_step": current_time,
@@ -133,17 +150,34 @@ class Strategy:
             "trade_direction": direction
         }
         self.last_trade_time = current_time
+        self.order_id = None  # Always reset here
 
         # Slack notification if available
         # slack_notifier.send(f"🚀 Entered {direction.upper()} at {price} | SL: {stop_loss_price}")
 
-        #if self.mode == "LIVE":
-        # TODO: Send exit order via executor (live trading)
-        # if self.executor:
-        #     symbol = "GC2"
-        #     qty = 1
-        #     side = "sell" if self.trade["trade_direction"] == "buy" else "buy"
-        #     self.executor.send_order(symbol=symbol, side=side, qty=qty, order_type="market")
+        # Place order via executor if in LIVE mode
+        if self.mode == "LIVE":
+            if self.executor:
+                # NOTE: For Topstep, use `side=0` for BUY, `side=1` for SELL
+                order_result = self.executor.place_order(
+                    side=side,
+                    size=1,           # contracts
+                    order_type=2,     # 2 = MARKET order (see your API docs for type mapping)
+                    limit_price=None,
+                    stop_price=round_to_tick(stop_loss_price)
+                )
+                print("[Order Placed]", order_result)
+                slack_notifier.send(f"🚀 Entered {direction.upper()} at {price} | SL: {stop_loss_price}")
+                #TODO check for succesful entry
+                # Only store orderId if success is True
+                if order_result.get("success") and order_result.get("orderId"):
+                    self.order_id = order_result["orderId"]
+                    slack_notifier.send(f"🚀 Entered {direction.upper()} at {price} | SL: {stop_loss_price} | Order ID: {self.order_id}")
+                    print(f"✅ Order filled, ID = {self.order_id}")
+                else:
+                    print("❌ Order placement failed:", order_result)
+                    slack_notifier.send(f"❌ Order placement failed for {direction.upper()} at {price} | SL: {stop_loss_price}")
+
 
 
         
@@ -166,6 +200,21 @@ class Strategy:
             self.trade["stop_loss_price"] = self.trade["entry_price"]
             self.trade["break_even_set"] = True
             print(f"🔁 SL moved to breakeven at {self.trade['stop_loss_price']}")
+            if self.mode == "LIVE" and self.executor and self.order_id:
+                entry_price = round(self.trade["entry_price"], 2)
+                modify_result = self.executor.modify_order(
+                    order_id=self.order_id,
+                    stop_price=entry_price
+                )
+                print("🔧 Modify order result:", modify_result)
+                if modify_result.get("success"):
+                    print(f"✅ SL moved to BE at {entry_price} for order {self.order_id}!")
+                    slack_notifier.send(f"🔁 SL moved to BE at {entry_price} for order {self.order_id}")
+                    self.trade["stop_loss_price"] = entry_price
+                    self.trade["break_even_set"] = True
+                else:
+                    print("❌ Failed to move SL to BE:", modify_result)
+                    slack_notifier.send(f"❌ Failed to move SL to BE for order {self.order_id}: {modify_result}")
 
         # Exit on profit target
         if self.unrealized_pnl >= 700:
@@ -197,9 +246,9 @@ class Strategy:
         direction = self.trade["trade_direction"]
         entry_price = self.trade["entry_price"]
         if direction == "buy":
-            self.unrealized_pnl = (price - entry_price) * 100
+            self.unrealized_pnl = (price - entry_price) * 100 #TODO update for 1 contract
         else:
-            self.unrealized_pnl = (entry_price - price) * 100
+            self.unrealized_pnl = (entry_price - price) * 100 #TODO update for 1 contract
 
     def exit_trade(self, exit_price, current_time, bar, reason):
         self.trade.update({
@@ -210,9 +259,9 @@ class Strategy:
         })
 
         pnl = (
-            (exit_price - self.trade["entry_price"]) * 100
+            (exit_price - self.trade["entry_price"]) * 100 # TODO update for 1 contract
             if self.trade["trade_direction"] == "buy"
-            else (self.trade["entry_price"] - exit_price) * 100
+            else (self.trade["entry_price"] - exit_price) * 100 #TODO update for 1 contract
         )
         self.trade["trade_pnl"] = pnl
         self.balance += pnl
@@ -221,14 +270,16 @@ class Strategy:
         print(f"💰 {self.trade['trade_direction'].upper()} exit at {exit_price} | PnL: {pnl:.2f} | Reason: {reason}")
         # slack_notifier.send((f"💰 {self.trade['trade_direction'].upper()} exit at {exit_price} | PnL: {pnl:.2f} | Reason: {reason}"))
 
-        #if self.mode == "LIVE":
-        # TODO: Send exit order via executor (live trading)
-        # if self.executor:
-        #     symbol = "GC2"
-        #     qty = 1
-        #     side = "sell" if self.trade["trade_direction"] == "buy" else "buy"
-        #     self.executor.send_order(symbol=symbol, side=side, qty=qty, order_type="market")
-
+        # TODO review close psotions
+        if self.mode == "LIVE" and self.executor:
+            close_result = self.executor.close_position()
+            print("🔒 Attempted to close position:", close_result)
+            if close_result.get("success"):
+                print(f"✅ Position successfully closed at {exit_price} | PnL: {pnl:.2f} | Reason: {reason}")
+                slack_notifier.send(f"✅ Position successfully closed at {exit_price} | PnL: {pnl:.2f} | Reason: {reason}")
+            else:
+                print("❌ Failed to close position:", close_result)
+                slack_notifier.send(f"❌ Failed to close position at {exit_price} | Reason: {reason} | Response: {close_result}")
         self.trades.append(self.trade)
         self.log_trade()  # 👈 log to file immediately
         self.trade = {}
@@ -249,4 +300,5 @@ def is_long_allowed(price, ema_9_60m, ema_9_angle_60m):
 
 def is_short_allowed(price, ema_9_60m, ema_9_angle_60m):
     return price < ema_9_60m and ema_9_angle_60m < -3
-
+def round_to_tick(price, tick_size=0.1):
+    return round(round(price / tick_size) * tick_size, 2)
