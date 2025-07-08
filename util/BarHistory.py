@@ -117,6 +117,45 @@ class BarHistory:
         df5["ema_33_5m"] = df5["price"].ewm(span=33, adjust=False).mean()
         df5["ema_7_angle_5m"] = df5["ema_7_5m"].rolling(window=5).apply(ema_slope_angle, raw=False)
 
+        df5["prev_close"] = df5["price"].shift(1)
+        df5["tr_5m"] = df5[["high", "low", "prev_close"]].apply(
+            lambda row: max(
+                row["high"] - row["low"],
+                abs(row["high"] - row["prev_close"]) if pd.notnull(row["prev_close"]) else 0,
+                abs(row["low"] - row["prev_close"]) if pd.notnull(row["prev_close"]) else 0
+            ), axis=1
+        )
+        df5["atr_14_5m"] = df5["tr_5m"].rolling(14).mean()
+
+
+        # 15 min indicators 
+        # 15-Minute Resample for MACD
+        df15 = df[["open", "high", "low", "price", "volume"]].resample("15T").agg({
+            "open": "first",
+            "high": "max",
+            "low": "min",
+            "price": "last",
+            "volume": "sum"
+        })
+
+        # You can use the classic MACD (12, 26, 9) or your custom settings if you want.
+        ema8_15 = df15["price"].ewm(span=8, adjust=False).mean()
+        ema17_15 = df15["price"].ewm(span=17, adjust=False).mean()
+        macd_15 = ema8_15 - ema17_15
+        macd_signal_15 = macd_15.ewm(span=9, adjust=False).mean()
+
+
+        df15["macd_15m"] = macd_15
+        df15["macd_signal_15m"] = macd_signal_15
+        df15["macd_cross_bullish_15m"] = ((macd_15.shift(1) <= macd_signal_15.shift(1)) & (macd_15 > macd_signal_15)).astype(int)
+        df15["macd_cross_bearish_15m"] = ((macd_15.shift(1) >= macd_signal_15.shift(1)) & (macd_15 < macd_signal_15)).astype(int)
+        df15["ema_20_15m"] = df15["price"].ewm(span=20, adjust=False).mean()
+        df15["ema_20_slope_15m"] = df15["ema_20_15m"].rolling(window=5).apply(linear_slope, raw=False)
+        df15["ema_20_angle_15m"] = df15["ema_20_15m"].rolling(window=5).apply(ema_slope_angle, raw=False)
+
+        
+  
+
         # 60-Minute Resample for EMA(9) and its slope/angle
         df60 = df[["open", "high", "low", "price", "volume"]].resample("60T").agg({
             "open": "first",
@@ -134,14 +173,21 @@ class BarHistory:
         five_min_feats = [
             "macd_5m", "macd_signal_5m",
             "macd_cross_bullish_5m", "macd_cross_bearish_5m",
-            "ema_7_5m", "ema_17_5m", "ema_33_5m", "ema_7_angle_5m"
+            "ema_7_5m", "ema_17_5m", "ema_33_5m", "ema_7_angle_5m","atr_14_5m"
         ]
 
         sixty_min_feats = [
             "ema_9_60m", "ema_9_slope_60m", "ema_9_angle_60m"
         ]
 
+
+        # When ready, join back to your main df (using same join method as before)
+        fifteen_min_feats = [
+           "macd_cross_bullish_15m", "macd_cross_bearish_15m", "ema_20_15m","ema_20_angle_15m"
+        ]
+
         df = df.join(df5[five_min_feats], how="left")
+        df = df.join(df15[fifteen_min_feats], how="left")
         df = df.join(df60[sixty_min_feats], how="left")
         df.fillna(method="ffill", inplace=True)
         df["timestamp"] = df.index
