@@ -8,3 +8,6 @@ matplotlib
 scikit-learn
 ta
 shimmy>=0.2.1
+signalrcore==0.9.5
+certifi
+backports.zoneinfo

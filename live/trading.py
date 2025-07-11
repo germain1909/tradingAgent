@@ -15,6 +15,9 @@ import os
 import pandas as pd
 import json
 import glob
+from datetime import datetime, timedelta, timezone
+from backports.zoneinfo import ZoneInfo
+
 
 # SSL Cert
 import certifi
@@ -38,6 +41,7 @@ SIM = "SIM"
 MODE = LIVE # BACKTEST or SIM or LIVE
 CONTRACT_ID = "CON.F.US.GCE.Q25"
 ACCOUNT_ID = "7882531"
+WARMUP_PERIOD_TRADING = 10
 
 
 # Instantiate the aggregator once
@@ -116,19 +120,61 @@ def on_gateway_trade(args,writer=None,strategy=None):
 
     if new_bar:
         #TODO we need to update to handle TOPSTEP data structure
-        bar_json = bar_to_json(new_bar)
+        print("NEW BAR",new_bar)
+        
+        # Convert to DataFrame
+        df_signalr = pd.DataFrame([new_bar]).rename(columns={
+                "timestamp": "timestamp",
+                "open": "open",
+                "high": "high",
+                "low": "low",
+                "close": "price",
+                "volume": "volume",
+            })
+
+        #Localize and convert to EST
+        # df_signalr.index = pd.to_datetime(df.index)
+        # if df_signalr.index.tz is None:
+        #     df_signalr.index = df.index.tz_localize("UTC")
+        # df_signalr.index = df.index.tz_convert("US/Eastern")
+        # df_signalr.index.name = "timestamp"
+        # df_signalr = df.reset_index()
+
+        df_signalr.set_index('timestamp', inplace=True)
+        df_signalr = df_signalr.tz_convert('US/Eastern')
+        df_signalr.reset_index(inplace=True)
+        #Convert to a row
+        row_signalr = df_signalr.iloc[0]
+        print("Germain1",row_signalr)
+        bar_json = {
+            "timestamp": row_signalr["timestamp"],
+            "open": row_signalr["open"],
+            "high": row_signalr["high"],
+            "low": row_signalr["low"],
+            "price": row_signalr["price"],
+            "volume": row_signalr["volume"]
+        }
+        print("Germain2")
         bar_history.add_bar(bar_json)
-        print(bar_json)
-        bar_history.add_bar(bar_json)
-        if writer:
-            writer.append_bar(bar_json)
-        # Enrich and run strategy after each new bar in LIVE/SIM
-        enriched_df = bar_history.get_enriched_dataframe()
-        if len(enriched_df) > 20:  
-            current_bar = enriched_df.iloc[-1]
-            current_time = enriched_df.index[-1]
-            if strategy:
-                strategy.should_execute(current_bar, enriched_df, current_time)
+        print("Germain3")
+        try:
+            if writer:
+                writer.append_bar(new_bar)
+        except Exception as e:
+            print("❌ Error writing bar to file:", e)
+        print("AAAAAAA")
+        combined_df = bar_history.get_enriched_dataframe() 
+        combined_df.sort_index(inplace=True)
+        print("INITIAL Enriched DF:", combined_df.tail(20))  # print first 5 rows
+        print("Enriched DF COLUMNS:", combined_df.columns)  # print columns for structure
+        print("BBBBBB")
+        current_bar = combined_df.iloc[-1]
+        current_time = combined_df.index[-1]
+        print("current_time",current_time)
+        print("currentbar",current_bar)
+        if strategy:
+            print("Germain")
+            strategy.should_execute(current_bar, combined_df, current_time)
     else:
         print("No completed bars yet.")
 
@@ -240,6 +286,59 @@ def simulate_trades():
         print("🛑 Simulation interrupted.")
 
 
+
+#warmup minutes is something like 600
+def one_or_two_warmups(dt, warmup_hours=10):
+    warmup_minutes = warmup_hours * 60
+    session_start_time = dt.replace(hour=18, minute=0, second=0, microsecond=0)
+    if dt.hour < 18:
+        session_start_time -= timedelta(days=1)
+    minutes_since_session_start = (dt - session_start_time).total_seconds() / 60
+
+    if minutes_since_session_start >= warmup_minutes:
+        return 1
+    else:
+        return 2
+
+def get_warmup_df(dt, warmup_hours=10):
+    warmup_minutes = warmup_hours * 60
+    numWarmUpCalls = one_or_two_warmups(dt, warmup_hours)
+    six_pm_current_session = dt.replace(hour=18, minute=0, second=0, microsecond=0)
+    if dt.hour < 18:
+        six_pm_current_session -= timedelta(days=1)
+    previous_day = six_pm_current_session - timedelta(days=1)
+    five_pm_previous_session = previous_day.replace(hour=17, minute=0, second=0, microsecond=0)
+    returned_dataframe = None
+
+    if numWarmUpCalls == 1:
+        # All warmup in current session: last warmup_minutes
+        start_time = dt - timedelta(minutes=warmup_minutes)
+        returned_dataframe = fetcher.fetch_bars_by_time(start_time, dt)
+    else:
+        # Split across sessions
+        minutes_in_first_session = (dt - six_pm_current_session).total_seconds() / 60
+        minutes_in_second_session = warmup_minutes - minutes_in_first_session
+
+        # For previous session, go back minutes_in_second_session from five_pm_previous_session
+        second_session_start = five_pm_previous_session - timedelta(minutes=minutes_in_second_session)
+
+        #Convert times to UTC
+        second_session_start_UTC = second_session_start.astimezone(timezone.utc)
+        five_pm_previous_session_UTC = five_pm_previous_session.astimezone(timezone.utc)
+        six_pm_current_session_UTC = six_pm_current_session.astimezone(timezone.utc)
+        dt_UTC = dt.astimezone(timezone.utc)
+
+        
+        # Fetch from previous session
+        returned_dataframe2 = fetcher.fetch_bars_by_time(second_session_start_UTC, five_pm_previous_session_UTC)
+        # Fetch from current session
+        returned_dataframe1 = fetcher.fetch_bars_by_time(six_pm_current_session_UTC, dt_UTC)
+        
+        # Combine both DataFrames
+        returned_dataframe = pd.concat([returned_dataframe2, returned_dataframe1]).sort_index()
+
+    return returned_dataframe
+
 def run_backtest():
     print("🔍 Running backtest...")
 
@@ -319,7 +418,9 @@ def run_backtest():
 
 
 print("⏳ Fetching warm-up data...")
-df = fetcher.fetch_past_hours(10)
+now_eastern = datetime.now(ZoneInfo("America/New_York"))
+df = get_warmup_df(now_eastern, warmup_hours=WARMUP_PERIOD_TRADING)
+# Need to cahnge WARMUP PERIOD in both files historical fetcher and  trading
 print(df.head(1))
 
 #When using iterrows(), the timestamp is in row.name, not row["timestamp"].

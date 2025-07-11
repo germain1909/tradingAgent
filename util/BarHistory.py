@@ -50,12 +50,18 @@ class BarHistory:
         """
         if not self.bars:
             return pd.DataFrame()
-
         df = pd.DataFrame(self.bars)
-        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        print("INITIAL DF:", df.head(5))  # print first 5 rows
+        print("DF COLUMNS:", df.columns)  # print columns for structure
+        # print(df['timestamp'].head(10))
+        # print(df['timestamp'].apply(type).head(10))
         df.set_index('timestamp', inplace=True)
+        print("stuff1")
+        print(df.index)
         df.sort_index(inplace=True)
+        print("stuff2")
         self.set_timezone_EST(df)    
+        print("stuff3")
 
         return df
     
@@ -71,11 +77,12 @@ class BarHistory:
         """
         Returns a DataFrame with only the essential indicators needed for live decision-making.
         """
+        print("Hi")
         df = self.get_dataframe()
         if df.empty:
             return df
-
         self.set_timezone_EST(df)
+        print("QQQQQQQQQ")
 
         if df.index.tz is None:
             df.index = df.index.tz_localize("UTC").tz_convert("US/Eastern")

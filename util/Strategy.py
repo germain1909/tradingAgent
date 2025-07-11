@@ -62,6 +62,7 @@ class Strategy:
         return self.last_trade_time is not None and (current_time - self.last_trade_time) < pd.Timedelta(minutes=15)
 
     def should_execute(self, bar, bar_history_df, current_time):
+        print("should_execute")
         price = bar["price"]
         ema_9_60m = bar["ema_9_60m"]
         ema_9_angle_60m = bar["ema_9_angle_60m"]
@@ -98,10 +99,10 @@ class Strategy:
 
 
         #Look for a recent highs/lows
-        lookback = 30  # You can tune this as needed
-        self.update_swings(bar_history_df, lookback=lookback)
-        last_swing = self.get_last_swing(self.swings, current_time)
-
+        # lookback = 30  # You can tune this as needed
+        # self.update_swings(bar_history_df, lookback=lookback)
+        # last_swing = self.get_last_swing(self.swings, current_time)
+        print("calculating")
 
         
 
@@ -120,6 +121,8 @@ class Strategy:
                     if recent_atr_5m > 2.7:
                         print("📈 Long entry confirmed")
                         return self.enter_trade("buy", price, current_time, bar)
+            else:
+                print("NO LONG TRADE THIS TIME")        
                     
             # Short setup
             if price < ema_9_60m and ema_9_angle_60m < -3:
@@ -128,6 +131,8 @@ class Strategy:
                     if recent_atr_5m > 2.8:
                         print("📉 Short entry confirmed")
                         return self.enter_trade("sell", price, current_time, bar)
+            else:
+                print("NO SHORT TRADE THIS TIME")
 
         return False
 
